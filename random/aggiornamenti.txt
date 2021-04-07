@@ -1,0 +1,4 @@
+LISTA AGGIORNAMENTI
+
+1) Lab1, Ex01.2: aggiunto metodi Lorentz e Exp per generazione di numeri casuali double tramite distribuzione lorentziana ed esponenziale.
+2) Lab2, Ex02.1: aggiunto metodo Ex02_1 per generazione di numeri casuali tramite inversione della cumulativa di y=-2x+2
