@@ -71,12 +71,8 @@ int main() {
 }
 
 double error(double sum, double sum2, int n) {
-  	if (n == 0) {
-    	return 0;
-    }
-  	else  {
-    	return sqrt((sum2 - sum*sum) / n);
-    }
+  	if (n == 0) return 0;
+  	else return sqrt((sum2 - sum*sum) / n);
 }
 
 Random init() {
@@ -85,21 +81,22 @@ Random init() {
    	int p1, p2;
    	ifstream Primes("Primes");
    	if (Primes.is_open()){
-      	Primes >> p1 >> p2 ;
+      		Primes >> p1 >> p2 ;
    	} else cerr << "PROBLEM: Unable to open Primes" << endl;
    	Primes.close();
 
    	ifstream input("seed.in");
-   	string property; // D = 26
+   	string property;
    	if (input.is_open()){
-      	while ( !input.eof() ){
-         	input >> property;
-         	if( property == "RANDOMSEED" ){
-            	input >> seed[0] >> seed[1] >> seed[2] >> seed[3];
-            	rnd.SetRandom(seed,p1,p2);
-         	}
-      	}
-      	input.close();
-   	} else cerr << "PROBLEM: Unable to open seed.in" << endl;
+      		while ( !input.eof() ){
+         		input >> property;
+         		if( property == "RANDOMSEED" ){
+            			input >> seed[0] >> seed[1] >> seed[2] >> seed[3];
+            			rnd.SetRandom(seed,p1,p2);
+         		}
+      		}
+      		input.close();
+   	}
+       	else cerr << "PROBLEM: Unable to open seed.in" << endl;
    	return rnd;
 }
