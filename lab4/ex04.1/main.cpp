@@ -8,135 +8,173 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
-#include <sstream>
 #include <cmath>
-#include "MolDyn_NVE.h"
+#include "MolDyn.h"
 
 using namespace std;
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
 
-  	if(argc<2){
-	  	cerr << "Usage: " << argv[0] << " <true> or <false>\n";
+  	if(argc<2) {
+	  	cerr << "Usage: " << argv[0] << " start/equilibrate/measure\n";
 	  	return -1;
 	}
-	stringstream ss(argv[1]);
-	bool old;
-	if(!(ss >> boolalpha >> old)) {
-	  	cerr << "Usage: " << argv[0] << " <true> or <false>\n";
+
+	if(string(argv[1]) == "start") init(false);
+	else if(string(argv[1]) == "equilibrate") init(true, "old.0");
+	else if(string(argv[1]) == "measure") init(false, "old.0");
+	else {
+		cerr << "Usage: " << argv[0] << " start/equilibrate/measure\n";
 		return 1;
 	}
-	Input(old);
-  	int nconf = 1;
+
+	int nconf = 1;
   	for(int i=1; i <= N_steps; ++i) {
      		Move();
-     		if(i%iprint == 0) cout << "Number of time-steps: " << i << endl;
-     		if(i%10 == 0) { // configurazioni estremamente correlate: non serve calcolare proprietà ogni step
+     		if(i%iprint == 0) cout << i/iprint * 10 << "%\r";
+		cout.flush();
+     		if(i%10 == 0) {
         		Measure();
-//		        ConfXYZ(nconf);//Write actual configuration in XYZ format //Commented to avoid "filesystem full"! 
+//		        ConfXYZ(nconf); 
         		nconf += 1;
      		}
 		if(i == N_steps - 1) ConfOld();
   	}
   	
-	ConfFinal(); // scrive la conf. finale: serve per poter ricominciare da questa
+	cout << endl;
+	ConfFinal();
   	return 0;
 }
 
-
-void Input(bool old) {
+void init(bool equilibrate, string old) {
 
 	ifstream ReadInput, ReadConf, ReadOld;
   	double ep, ek, pr, et, vir; // ex: e = energia, x = tipo (e.g. p = potenziale)
 
-  	seed = 1;    // Set seed for random numbers
-  	srand(seed); // Initialize random number generator
+  	seed = 1; 
+  	srand(seed);
   
   	ReadInput.open("input.dat"); 
-
-  	ReadInput >> temp;
-
-  	ReadInput >> N_part;
-
-  	ReadInput >> rho;
-  	vol = (double)N_part/rho;
-  	box = pow(vol, 1./3.);
-
-  	ReadInput >> rcut;
-  	ReadInput >> dt;
-  	ReadInput >> N_steps;
-  	ReadInput >> iprint;
-
+  	ReadInput >> temp >> N_part >> rho >> rcut >> dt >> N_steps >> iprint;
   	ReadInput.close();
 
-	//Prepare array for measurements
+	vol = (double)N_part/rho;
+	box = pow(vol, 1./3.);
+
   	iv = 0; //Potential energy
   	ik = 1; //Kinetic energy
   	ie = 2; //Total energy
   	it = 3; //Temperature
   	n_props = 4; //Number of observables
 
-	//Read initial configuration
   	ReadConf.open("config.0");
   	for(int i=0; i<N_part; ++i) {
     		ReadConf >> x[i] >> y[i] >> z[i];
-    		x[i] *= box; // x[i] = x[i] * box
+    		x[i] *= box;
     		y[i] *= box;
     		z[i] *= box;
   	}
   	ReadConf.close();
 
-	//Prepare initial velocities
-   	double sumv[3] = {0.};
-   	for(int i=0; i<N_part; ++i) {
-     		vx[i] = rand()/double(RAND_MAX) - 0.5;
-     		vy[i] = rand()/double(RAND_MAX) - 0.5;
-     		vz[i] = rand()/double(RAND_MAX) - 0.5;
-
-     		sumv[0] += vx[i];
-     		sumv[1] += vy[i];
-     		sumv[2] += vz[i];
-   	}
-   	for(int idim=0; idim<3; ++idim) sumv[idim] /= (double)N_part;
-   	double sumv2 = 0.;
-   	for(int i=0; i<N_part; ++i) {
-     		vx[i] -= sumv[0];
-     		vy[i] -= sumv[1];
-     		vz[i] -= sumv[2];
-
-     		sumv2 += vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i];
-   	}
-   	sumv2 /= (double)N_part;
+     	if(old.empty()) {
+   		double sumv[3] = {0.};
+    		for(int i=0; i<N_part; ++i) {
+     			vx[i] = rand()/double(RAND_MAX) - 0.5;
+     			vy[i] = rand()/double(RAND_MAX) - 0.5;
+     			vz[i] = rand()/double(RAND_MAX) - 0.5;
 	
-   	double fs = sqrt(3 * temp / sumv2);   // fs = fattore di scala velocità
-   	for(int i=0; i<N_part; ++i) {
-     		vx[i] *= fs;
-     		vy[i] *= fs;
-     		vz[i] *= fs;
+     			sumv[0] += vx[i];
+     			sumv[1] += vy[i];
+     			sumv[2] += vz[i];
+   		}
+	
+		// per evitare drift del CM
+   		for(int idim=0; idim<3; ++idim) sumv[idim] /= (double)N_part;
+   		double sumv2 = 0.;
+   		for(int i=0; i<N_part; ++i) {
+     			vx[i] -= sumv[0];
+     			vy[i] -= sumv[1];
+     			vz[i] -= sumv[2];
+	
+     			sumv2 += vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i];
+   		}
+   		sumv2 /= (double)N_part;
+		
+   		double fs = sqrt(3 * temp / sumv2); // fs = fattore di scala velocità
+   		for(int i=0; i<N_part; ++i) {
+     			vx[i] *= fs;
+     			vy[i] *= fs;
+     			vz[i] *= fs;
 
-     		if(old) {
 			xold[i] = Pbc(x[i] - vx[i] * dt);
      			yold[i] = Pbc(y[i] - vy[i] * dt);
      			zold[i] = Pbc(z[i] - vz[i] * dt);
-		} 
-		else {
-  			ReadOld.open("old.0");
-			for(int j=0; j<N_part; ++j) {
-    				ReadOld >> xold[j] >> yold[j] >> zold[j];
-    				xold[j] *= box; // x[i] = x[i] * box
-    				yold[j] *= box;
-    				zold[j] *= box;
-  			}
-  			ReadOld.close();
+		}  	
+	}
+	else {
+  		ReadOld.open("old.0");
+		for(int j=0; j<N_part; ++j) {
+			ReadOld >> xold[j] >> yold[j] >> zold[j];
+			xold[j] *= box; // x[i] = x[i] * box
+			yold[j] *= box;
+			zold[j] *= box;
 		}
+		ReadOld.close();
 
-   	}
+		if(equilibrate) {
+  			double xnew[N_part], ynew[N_part], znew[N_part], fx[m_part], fy[m_part], fz[m_part];
+
+  			for(int i=0; i<N_part; ++i) { //Force acting on particle i
+    				fx[i] = Force(i, 0);
+    				fy[i] = Force(i, 1);
+    				fz[i] = Force(i, 2);
+  			}
+		
+  			for(int i=0; i<N_part; ++i) { //Verlet integration scheme
+		
+    				xnew[i] = Pbc( 2. * x[i] - xold[i] + fx[i] * dt * dt );
+    				ynew[i] = Pbc( 2. * y[i] - yold[i] + fy[i] * dt * dt );
+    				znew[i] = Pbc( 2. * z[i] - zold[i] + fz[i] * dt * dt );
+		
+    				vx[i] = Pbc(xnew[i] - x[i]) / dt;
+    				vy[i] = Pbc(ynew[i] - y[i]) / dt;
+    				vz[i] = Pbc(znew[i] - z[i]) / dt;
+		
+			}
+	
+			double t = 0.;
+			
+  			for(int i=0; i<N_part; ++i) t += 0.5 * (vx[i]*vx[i] + vy[i]*vy[i] + vz[i]*vz[i]);
+			
+    			double T = (2./3.) * t/(double)N_part; //Temperature
+			double fscale = T / temp;
+			
+			cout << fscale << endl;
+	
+			for(int i=0; i<N_part; ++i) {
+				vx[i] /= sqrt(fscale);
+				vy[i] /= sqrt(fscale);
+				vz[i] /= sqrt(fscale);
+			}
+	
+  			for(int i=0; i<N_part; ++i) {
+    				xold[i] = Pbc(xnew[i] - dt*vx[i]);
+    				yold[i] = Pbc(ynew[i] - dt*vy[i]);
+    				zold[i] = Pbc(znew[i] - dt*vz[i]);
+		
+    				x[i] = xnew[i];
+    				y[i] = ynew[i];
+    				z[i] = znew[i];
+			}  	
+		}
+	}
+	
    	return;
 }
-
 
 void Move(void) { //Move particles with Verlet algorithm
   	double xnew, ynew, znew, fx[m_part], fy[m_part], fz[m_part];
@@ -245,21 +283,11 @@ void Measure() { //Properties measurement
     	return;
 }
 
-void ConfOld(void) { //Write final configuration
-  	ofstream WriteOld;
-
-  	WriteOld.open("old.final");
-
-  	for(int i=0; i<N_part; ++i) {
-    		WriteOld << x[i]/box << "\t" <<  y[i]/box << "\t" << z[i]/box << endl;
-  	}
-  	WriteOld.close();
-  	return;
-}
 
 void ConfFinal(void) { //Write final configuration
   	ofstream WriteConf;
 
+//  	cout << "Print final configuration to file config.final " << endl << endl;
   	WriteConf.open("config.final");
 
   	for(int i=0; i<N_part; ++i) {
@@ -284,3 +312,15 @@ void ConfXYZ(int nconf) { //Write configuration in .xyz format
 double Pbc(double r) {  // periodic boundary conditions
     	return r - box * rint(r/box);
  }
+
+void ConfOld(void) { //Write final configuration
+  	ofstream WriteOld;
+
+  	WriteOld.open("old.final");
+
+  	for(int i=0; i<N_part; ++i) {
+    		WriteOld << x[i]/box << "\t" <<  y[i]/box << "\t" << z[i]/box << endl;
+  	}
+  	WriteOld.close();
+  	return;
+}

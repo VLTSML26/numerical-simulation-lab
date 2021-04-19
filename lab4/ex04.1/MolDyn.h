@@ -7,6 +7,7 @@
 _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
+#include <string>
 
 // parameters, observables
 const int m_props = 4;
@@ -31,7 +32,7 @@ int N_steps, iprint, seed;
 double dt;
 
 // functions
-void Input(bool);
+void init(bool, std::string old = std::string());
 void Move(void);
 void ConfOld(void);
 void ConfFinal(void);
