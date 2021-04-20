@@ -1,20 +1,20 @@
 ./clean.sh
-g++ -o MolDyn.exe main.cpp
 cp config.fcc config.0
-echo "start"
+make
+echo "=== start"
 ./MolDyn.exe start
-for i in {1..1}
+for i in {1..4}
 do
-	echo "equilibrate $i"
+	echo "=== equilibrate $i"
 	cp config.final config.0
 	cp old.final old.0
 	./MolDyn.exe equilibrate
 done
-for j in {1..1}
+for j in {1..2}
 do
-	echo "measure $j"
+	echo "=== measure $j"
 	cp config.final config.0
 	cp old.final old.0
 	./MolDyn.exe measure
 done
-
+echo "measure.out: 0-step 1-temp 2-etot 3-ekin 4-epot"

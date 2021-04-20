@@ -7,36 +7,46 @@
 _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
+
+#ifndef _Mol_Dyn_h_
+#define _Mol_Dyn_h_
+
 #include <string>
+#include <fstream>
 
-// parameters, observables
-const int m_props = 4;
-int n_props;
-int iv,ik,it,ie;
-double stima_pot, stima_kin, stima_etot, stima_temp;
+class MolDyn {
 
-// averages
-double acc,att;
+	public :
 
-//configuration
-const int m_part = 108;
-double x[m_part], y[m_part], z[m_part], xold[m_part], yold[m_part], zold[m_part];
-double vx[m_part], vy[m_part], vz[m_part];
+	MolDyn();
+	MolDyn(bool, std::string old = std::string());
+   	~MolDyn(); 
 
-// thermodynamical state
-int N_part;
-double energy, temp, vol, rho, box, rcut;
+	int Get_steps() {return m_steps;}
+	int Get_iprint() {return m_iprint;}
 
-// simulation
-int N_steps, iprint, seed;
-double dt;
+	void Move();
+//	void ConfXYZ(int);
+	void Measure();
+	void ConfFinal(std::string, std::string);
+	double Force(int, int);
+	double Pbc(double);
 
-// functions
-void init(bool, std::string old = std::string());
-void Move(void);
-void ConfOld(void);
-void ConfFinal(void);
-void ConfXYZ(int);
-void Measure(void);
-double Force(int, int);
-double Pbc(double);
+	private :
+
+	int m_steps, m_parts, m_iprint, m_seed;
+	double (*m_x), (*m_y), (*m_z), // x
+		   (*m_xold), (*m_yold), (*m_zold), // xold
+		   (*m_vx), (*m_vy), (*m_vz); // v
+	double m_dt, m_rcut, m_box, m_rho, m_temp;
+
+	std::ifstream openfile(std::string);
+
+//	double acc,att;
+//	int iv,ik,it,ie;
+//	double energy;
+//	double vol; penso non usato altrove
+//	const int m_props;
+};
+
+#endif
