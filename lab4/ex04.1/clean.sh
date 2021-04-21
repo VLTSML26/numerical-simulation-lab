@@ -1,2 +1,2 @@
-rm -rf measure.out
+rm -rf *.out
 rm -rf frames/*.xyz

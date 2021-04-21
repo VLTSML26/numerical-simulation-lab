@@ -41,12 +41,6 @@ class MolDyn {
 	double m_dt, m_rcut, m_box, m_rho, m_temp;
 
 	std::ifstream openfile(std::string);
-
-//	double acc,att;
-//	int iv,ik,it,ie;
-//	double energy;
-//	double vol; penso non usato altrove
-//	const int m_props;
 };
 
 #endif

@@ -23,24 +23,15 @@ MolDyn::MolDyn(bool equilibrate, string old) {
 //	m_props = 4;
 	m_seed = 1;
 	m_blocks = 100;
+	m_throws = 100;
 	srand(m_seed);
 
 	ifstream read = openfile("input.dat");
-//	read.open("input.dat");
 	read >> m_temp >> m_parts >> m_rho >> m_rcut >> m_dt >> m_steps >> m_iprint;
 	read.close();
 
-//	cout << m_temp << m_parts << m_rho << m_rcut << m_dt << m_steps << m_iprint << endl;;
 	double vol = (double) m_parts / m_rho;
 	m_box = pow(vol, 1./3.);
-	m_throws = 100;
-
-	/* per me questi sono inutili
-	iv = 0;
-  	ik = 1;
-  	ie = 2;
-  	it = 3;
-	*/
 
 	m_x = new double[m_parts];
 	m_y = new double[m_parts];
@@ -54,7 +45,6 @@ MolDyn::MolDyn(bool equilibrate, string old) {
     	m_z[i] *= m_box;
   	}
   	read.close();
-	//cout << "MolDyn() finito" << endl;
 
 	m_vx = new double[m_parts];
 	m_vy = new double[m_parts];
@@ -67,19 +57,15 @@ MolDyn::MolDyn(bool equilibrate, string old) {
 	if(old.empty()) {
    		double sumv[3] = {0.};
     	for(int i=0; i<m_parts; ++i) {
-			//cout << "old è empty" << endl;
      		m_vx[i] = rand()/double(RAND_MAX) - 0.5;
      		m_vy[i] = rand()/double(RAND_MAX) - 0.5;
      		m_vz[i] = rand()/double(RAND_MAX) - 0.5;
 
-			//cout << "alora " << endl; //m_vx[i] << endl;
      		sumv[0] += m_vx[i];
      		sumv[1] += m_vy[i];
      		sumv[2] += m_vz[i];
    		}
 	
-		//cout << "ok" << endl;
-		// per evitare drift del CM
    		for(int idim=0; idim<3; ++idim)
 			sumv[idim] /= (double) m_parts;
    		double sumv2 = 0.;
@@ -117,6 +103,8 @@ MolDyn::MolDyn(bool equilibrate, string old) {
 		if(equilibrate) {
   			double xnew[m_parts], ynew[m_parts], znew[m_parts], 
 				   fx[m_parts], fy[m_parts], fz[m_parts];
+
+			ofstream scale;
 
   			for(int i=0; i<m_parts; ++i) {
     			fx[i] = Force(i, 0);
@@ -159,9 +147,14 @@ MolDyn::MolDyn(bool equilibrate, string old) {
 			}
 		}
 	}
-
-	//cout << "MolDyn(bool, string) finito" << endl;
 }	
+
+MolDyn::~MolDyn() {
+	delete
+		m_x, m_y, m_z,
+		m_xold, m_yold, m_zold,
+		m_vx, m_vy, m_vz;
+}
 
 void MolDyn::Move() {
   	double xnew, ynew, znew, fx[m_parts], fy[m_parts], fz[m_parts];
@@ -190,12 +183,10 @@ void MolDyn::Move() {
     	m_z[i] = znew;
 	}
   	
-	//cout << "Move() finito" << endl;
 	return;
 }
 
 void MolDyn::Measure() {
-//	int bin;
   	double v = 0., t = 0.;
   	ofstream measure;
 
@@ -305,7 +296,7 @@ double MolDyn::Force(int ip, int idir) {
       		dr = sqrt(dr);
 
       		if(dr < m_rcut) {
-        		f += dvec[idir] * (48./pow(dr, 14) - 24./pow(dr, 8)); // -Grad_ip V(r)
+        		f += dvec[idir] * (48./pow(dr, 14) - 24./pow(dr, 8));
       		}
     	}
   	}
@@ -326,152 +317,3 @@ ifstream MolDyn::openfile(string file) {
 	}
 	return read;
 }
-
-/*
-MolDyn::MolDyn() {
-
-//	m_props = 4;
-	m_seed = 1;
-
-	ifstream read = openfile("input.dat");
-//	read.open("input.dat");
-	read >> m_temp >> m_parts >> m_rho >> m_rcut >> m_dt >> m_steps >> m_iprint;
-	read.close();
-
-//	cout << m_temp << m_parts << m_rho << m_rcut << m_dt << m_steps << m_iprint << endl;;
-	double vol = (double) m_parts / m_rho;
-	m_box = pow(vol, 1./3.);
-
-	*/
-	/* per me questi sono inutili
-	iv = 0;
-  	ik = 1;
-  	ie = 2;
-  	it = 3;
-	*/
-/*
-	m_x = new double[m_parts];
-	m_y = new double[m_parts];
-	m_z = new double[m_parts];
-
-	read = openfile("config.0");
-  	for(int i=0; i<m_parts; ++i) {
-    	read >> m_x[i] >> m_y[i] >> m_z[i];
-    	m_x[i] *= m_box;
-    	m_y[i] *= m_box;
-    	m_z[i] *= m_box;
-  	}
-  	read.close();
-	cout << "MolDyn() finito" << endl;
-}
-
-MolDyn::MolDyn(bool equilibrate, string old) {
-	MolDyn();
-	srand(m_seed);
-
-	m_vx = new double[m_parts];
-	m_vy = new double[m_parts];
-	m_vz = new double[m_parts];
-
-	m_xold = new double[m_parts];
-	m_yold = new double[m_parts];
-	m_zold = new double[m_parts];
-
-	if(old.empty()) {
-   		double sumv[3] = {0.};
-    	for(int i=0; i<m_parts; ++i) {
-			cout << "old è empty" << endl;
-     		m_vx[i] = rand()/double(RAND_MAX) - 0.5;
-     		m_vy[i] = rand()/double(RAND_MAX) - 0.5;
-     		m_vz[i] = rand()/double(RAND_MAX) - 0.5;
-
-			cout << "alora " << endl; //m_vx[i] << endl;
-     		sumv[0] += m_vx[i];
-     		sumv[1] += m_vy[i];
-     		sumv[2] += m_vz[i];
-   		}
-	
-		cout << "ok" << endl;
-		// per evitare drift del CM
-   		for(int idim=0; idim<3; ++idim)
-			sumv[idim] /= (double) m_parts;
-   		double sumv2 = 0.;
-   		for(int i=0; i<m_parts; ++i) {
-     		m_vx[i] -= sumv[0];
-     		m_vy[i] -= sumv[1];
-     		m_vz[i] -= sumv[2];
-	
-     		sumv2 += m_vx[i] * m_vx[i] + m_vy[i] * m_vy[i] + m_vz[i] * m_vz[i];
-   		}
-   		sumv2 /= (double) m_parts;
-		
-   		double fs = sqrt(3 * m_temp / sumv2); // fs = fattore di scala velocità
-   		for(int i=0; i<m_parts; ++i) {
-     		m_vx[i] *= fs;
-     		m_vy[i] *= fs;
-     		m_vz[i] *= fs;
-
-			m_xold[i] = Pbc(m_x[i] - m_vx[i] * m_dt);
-     		m_yold[i] = Pbc(m_y[i] - m_vy[i] * m_dt);
-     		m_zold[i] = Pbc(m_z[i] - m_vz[i] * m_dt);
-		}  	
-	}
-
-	else {
-  		ifstream read = openfile("old.0");
-		for(int j=0; j<m_parts; ++j) {
-			read >> m_xold[j] >> m_yold[j] >> m_zold[j];
-			m_xold[j] *= m_box; 
-			m_yold[j] *= m_box;
-			m_zold[j] *= m_box;
-		}
-		read.close();
-
-		if(equilibrate) {
-  			double xnew[m_parts], ynew[m_parts], znew[m_parts], 
-				   fx[m_parts], fy[m_parts], fz[m_parts];
-
-  			for(int i=0; i<m_parts; ++i) {
-    			fx[i] = Force(i, 0);
-    			fy[i] = Force(i, 1);
-    			fz[i] = Force(i, 2);
-  			}
-		
-  			for(int i=0; i<m_parts; ++i) { 
-    			xnew[i] = Pbc(2. * m_x[i] - m_xold[i] + fx[i] * m_dt * m_dt);
-    			ynew[i] = Pbc(2. * m_y[i] - m_yold[i] + fy[i] * m_dt * m_dt);
-    			znew[i] = Pbc(2. * m_z[i] - m_zold[i] + fz[i] * m_dt * m_dt);
-	
-    			m_vx[i] = Pbc(xnew[i] - m_x[i]) / m_dt;
-    			m_vy[i] = Pbc(ynew[i] - m_y[i]) / m_dt;
-    			m_vz[i] = Pbc(znew[i] - m_z[i]) / m_dt;
-			}
-	
-			double t = 0.;
-  			for(int i=0; i<m_parts; ++i) 
-				t += 0.5 * (m_vx[i]*m_vx[i] + m_vy[i]*m_vy[i] + m_vz[i]*m_vz[i]);
-			
-    		double T = (2./3.) * t / (double) m_parts; // temperatura
-			double fscale = T / m_temp;
-			cout << fscale << endl;
-	
-			for(int i=0; i<m_parts; ++i) {
-				m_vx[i] /= sqrt(fscale);
-				m_vy[i] /= sqrt(fscale);
-				m_vz[i] /= sqrt(fscale);
-			}
-	
-  			for(int i=0; i<m_parts; ++i) {
-    			m_xold[i] = Pbc(xnew[i] - m_dt * m_vx[i]);
-    			m_yold[i] = Pbc(ynew[i] - m_dt * m_vy[i]);
-    			m_zold[i] = Pbc(znew[i] - m_dt * m_vz[i]);
-	
-    			m_x[i] = xnew[i];
-    			m_y[i] = ynew[i];
-    			m_z[i] = znew[i];
-			}
-		}
-	}
-
-	cout << "MolDyn(bool, string) finito" << endl;
-}*/	
