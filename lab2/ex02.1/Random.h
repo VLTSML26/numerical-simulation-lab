@@ -8,31 +8,36 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
-#ifndef __Random__
-#define __Random__
+#ifndef _Random_h_
+#define _Random_h_
+
+#include <string>
+#include <fstream>
 
 class Random {
 
-private:
-  	int m1,m2,m3,m4,l1,l2,l3,l4,n1,n2,n3,n4;
+	public :
 
-protected:
-
-public:
-  	// constructors
   	Random();
-  	// destructor
-  	~Random();
-  	// methods
-  	void SetRandom(int * , int, int);
+  	~Random() {;}
+
+  	void SetRandom(int*, int, int);
   	void SaveSeed();
   	double Rannyu(void);
-  	double Rannyu(double min, double max);
-  	double Gauss(double mean, double sigma);
-  	double Exp(double lambda);
-  	double Lorentz(double mu, double gamma);
-  	double Ex02_1(); // metodo non generale introdotto appositamente per l'esercizio Ex02.1
-  
+  	double Rannyu(double, double);
+  	double Gauss(double, double);
+  	double Exp(double);
+  	double Lorentz(double, double);
+  	double Line();
+  	bool Bool();
+
+	private :
+
+  	int m_m1, m_m2, m_m3, m_m4,
+		m_l1, m_l2, m_l3, m_l4,
+		m_n1, m_n2, m_n3, m_n4;
+
+	std::ifstream openfile(std::string);
 };
 
-#endif // __Random__
+#endif 
