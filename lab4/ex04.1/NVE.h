@@ -8,39 +8,30 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
-#ifndef _Mol_Dyn_h_
-#define _Mol_Dyn_h_
+#ifndef _NVE_h_
+#define _NVE_h_
 
-#include <string>
-#include <fstream>
+#include "../../MolDyn/MolDyn.h"
 
-class MolDyn {
+class NVE : public MolDyn {
 
 	public :
 
-	MolDyn();
-	MolDyn(bool, std::string old = std::string());
-   	~MolDyn(); 
+	NVE(bool, std::string old = std::string());
+   	~NVE();
 
-	int Get_steps() {return m_steps;}
-	int Get_iprint() {return m_iprint;}
+	virtual void Move();
+	virtual void Measure();
 
-	void Move();
-//	void ConfXYZ(int);
-	void Measure();
-	void ConfFinal(std::string, std::string);
 	double Force(int, int);
-	double Pbc(double);
+	void ConfFinal(std::string, std::string);
+	double walker(int k) {return m_walker[k];}
 
 	private :
 
-	int m_steps, m_parts, m_iprint, m_seed;
-	double (*m_x), (*m_y), (*m_z), // x
-		   (*m_xold), (*m_yold), (*m_zold), // xold
+	double (*m_xold), (*m_yold), (*m_zold), // xold
 		   (*m_vx), (*m_vy), (*m_vz); // v
-	double m_dt, m_rcut, m_box, m_rho, m_temp;
 
-	std::ifstream openfile(std::string);
 };
 
 #endif

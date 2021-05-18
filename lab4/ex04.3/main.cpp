@@ -13,20 +13,26 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 #include <iomanip>
 #include <fstream>
 #include <cmath>
-#include "MolDyn.h"
+#include "NVE.h"
+#include "../../MolDyn/MolDyn.h"
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
 
-  	if(argc<2) {
-	  	cerr << "Usage: " << argv[0] << " start/equilibrate/measure\n";
-	  	return -1;
-	}
-
+	int iprint = 100000;
+	int imove = 1000;
 	bool equilibrate, block;
 	string old;
+  	const char stampa[4] = {'\t', '\t', '\t', '\n'};
+	
+	// checking correct number of inputs from ./
+  	if(argc<2) {
+	  	cerr << "Usage: " << argv[0] << " start/equilibrate/measure\n";
+		return 1;
+	}
 
+	// choose start/equilibrate/measure
 	if(string(argv[1]) == "start") {
 		equilibrate = false;
 		block = false;
@@ -34,47 +40,56 @@ int main(int argc, char* argv[]) {
 	else if(string(argv[1]) == "equilibrate") {
 		equilibrate = true;
 		block = false;
-		old = "old.0";
+		old = "../input/old.0";
 	}
 	else if(string(argv[1]) == "measure") {
 		equilibrate = false;
 		block = true;
-		old = "old.0";
+		old = "../input/old.0";
 	}
 	else {
 		cerr << "Usage: " << argv[0] << " start/equilibrate/measure\n";
 		return 1;
 	}
 	
-	MolDyn sim(equilibrate, old);
+	// start simulation 
+	NVE sim(equilibrate, old);
 	ofstream write_blocks("block_measure.out", ios::app);
 	
+	// iprint = 10^3 nsteps = 10^3
   	for(int i=1; i <= sim.Get_blocks(); ++i) {
-		double sum[4] = {0.};
+		double sum[sim.Get_props()] = {0.};
 		for(int j=1; j <= sim.Get_throws(); ++j) {
-			sim.Move();
-			if((i*sim.Get_throws() + j) % sim.Get_iprint() == 0) 
-				cout << (i*sim.Get_throws() + j)/sim.Get_iprint() * 10 << "%\r";
+			// cute counter
+			if((i*sim.Get_throws() + j) % iprint == 0) 
+				cout << (i*sim.Get_throws() + j)/iprint - 1 << "%\r";
 			cout.flush();
+			// during measure phase (block average)
 			if(block) {
-				double appo[4] = {0.};
-				sim.Measure(appo);
-				for(int k=0; k<4; ++k)
-					sum[k] += appo[k];
-			}
-			else if((i*sim.Get_throws() + j + 1) % 10 == 0)
+				sim.Move();
 				sim.Measure();
+				for(int k=0; k<sim.Get_props(); ++k)
+					sum[k] += sim.walker(k);
+			}
+			// during start or equilibration phases one has to perform normal measures (not blk)
+			// in order check if the system has a good behavior
+			// since it is already done in the previous exercises, I leave it commented
+			else if((i*sim.Get_throws() + j + 1) % imove == 0) {
+				sim.Move();
+				//sim.Measure();
+			}
 		}
 		if(block) {
-			for(int k=0; k<4; ++k)
+			for(int k=0; k<sim.Get_props(); ++k) {
 				sum[k] /= sim.Get_throws();
-			write_blocks << sum[0] << "\t" << sum[1] << "\t"
-						 << sum[2] << "\t" << sum[3] << "\n";
+				write_blocks << sum[k] << stampa[k];
+			}
 		}
   	}
   	
 	write_blocks.close();
-	cout << endl;
-	sim.ConfFinal("config.final", "old.final");
+	cout << endl; 
+	sim.ConfFinal("../input/config.final", "../input/old.final");
+
   	return 0;
 }

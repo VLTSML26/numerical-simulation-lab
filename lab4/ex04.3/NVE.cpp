@@ -14,52 +14,36 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 #include <iomanip>
 #include <fstream>
 #include <cmath>
-#include "MolDyn.h"
+#include "NVE.h"
 
 using namespace std;
 
-MolDyn::MolDyn(bool equilibrate, string old) {
+NVE::NVE(bool equilibrate, string old) : MolDyn() {
 
-//	m_props = 4;
-	m_seed = 1;
-	m_blocks = 100;
-	m_throws = 100;
-	srand(m_seed);
+	m_props = 4;
 
-	ifstream read = openfile("input.dat");
-	read >> m_temp >> m_parts >> m_rho >> m_rcut >> m_dt >> m_steps >> m_iprint;
-	read.close();
+	// 0 - Potential Energy
+	// 1 - Kinectic Energy
+	// 2 - Temperature
+	// 3 - Total Energy
+	m_walker = new double[m_props];
+	for(int i=0; i<m_props; ++i)
+			m_walker[i] = 0.;
 
-	double vol = (double) m_parts / m_rho;
-	m_box = pow(vol, 1./3.);
+	m_vx = new double[m_npart];
+	m_vy = new double[m_npart];
+	m_vz = new double[m_npart];
 
-	m_x = new double[m_parts];
-	m_y = new double[m_parts];
-	m_z = new double[m_parts];
-
-	read = openfile("config.0");
-  	for(int i=0; i<m_parts; ++i) {
-    	read >> m_x[i] >> m_y[i] >> m_z[i];
-    	m_x[i] *= m_box;
-    	m_y[i] *= m_box;
-    	m_z[i] *= m_box;
-  	}
-  	read.close();
-
-	m_vx = new double[m_parts];
-	m_vy = new double[m_parts];
-	m_vz = new double[m_parts];
-
-	m_xold = new double[m_parts];
-	m_yold = new double[m_parts];
-	m_zold = new double[m_parts];
+	m_xold = new double[m_npart];
+	m_yold = new double[m_npart];
+	m_zold = new double[m_npart];
 
 	if(old.empty()) {
    		double sumv[3] = {0.};
-    	for(int i=0; i<m_parts; ++i) {
-     		m_vx[i] = rand()/double(RAND_MAX) - 0.5;
-     		m_vy[i] = rand()/double(RAND_MAX) - 0.5;
-     		m_vz[i] = rand()/double(RAND_MAX) - 0.5;
+    	for(int i=0; i<m_npart; ++i) {
+     		m_vx[i] = m_rnd.Rannyu() - 0.5;
+     		m_vy[i] = m_rnd.Rannyu() - 0.5;
+     		m_vz[i] = m_rnd.Rannyu() - 0.5;
 
      		sumv[0] += m_vx[i];
      		sumv[1] += m_vy[i];
@@ -67,19 +51,19 @@ MolDyn::MolDyn(bool equilibrate, string old) {
    		}
 	
    		for(int idim=0; idim<3; ++idim)
-			sumv[idim] /= (double) m_parts;
+			sumv[idim] /= (double) m_npart;
    		double sumv2 = 0.;
-   		for(int i=0; i<m_parts; ++i) {
+   		for(int i=0; i<m_npart; ++i) {
      		m_vx[i] -= sumv[0];
      		m_vy[i] -= sumv[1];
      		m_vz[i] -= sumv[2];
 	
      		sumv2 += m_vx[i] * m_vx[i] + m_vy[i] * m_vy[i] + m_vz[i] * m_vz[i];
    		}
-   		sumv2 /= (double) m_parts;
+   		sumv2 /= (double) m_npart;
 		
    		double fs = sqrt(3 * m_temp / sumv2); // fs = fattore di scala velocità
-   		for(int i=0; i<m_parts; ++i) {
+   		for(int i=0; i<m_npart; ++i) {
      		m_vx[i] *= fs;
      		m_vy[i] *= fs;
      		m_vz[i] *= fs;
@@ -91,8 +75,8 @@ MolDyn::MolDyn(bool equilibrate, string old) {
 	}
 
 	else {
-  		ifstream read = openfile("old.0");
-		for(int j=0; j<m_parts; ++j) {
+  		ifstream read = openfile("../input/old.0");
+		for(int j=0; j<m_npart; ++j) {
 			read >> m_xold[j] >> m_yold[j] >> m_zold[j];
 			m_xold[j] *= m_box; 
 			m_yold[j] *= m_box;
@@ -101,18 +85,18 @@ MolDyn::MolDyn(bool equilibrate, string old) {
 		read.close();
 
 		if(equilibrate) {
-  			double xnew[m_parts], ynew[m_parts], znew[m_parts], 
-				   fx[m_parts], fy[m_parts], fz[m_parts];
+  			double xnew[m_npart], ynew[m_npart], znew[m_npart], 
+				   fx[m_npart], fy[m_npart], fz[m_npart];
 
 			ofstream scale;
 
-  			for(int i=0; i<m_parts; ++i) {
+  			for(int i=0; i<m_npart; ++i) {
     			fx[i] = Force(i, 0);
     			fy[i] = Force(i, 1);
     			fz[i] = Force(i, 2);
   			}
 		
-  			for(int i=0; i<m_parts; ++i) { 
+  			for(int i=0; i<m_npart; ++i) { 
     			xnew[i] = Pbc(2. * m_x[i] - m_xold[i] + fx[i] * m_dt * m_dt);
     			ynew[i] = Pbc(2. * m_y[i] - m_yold[i] + fy[i] * m_dt * m_dt);
     			znew[i] = Pbc(2. * m_z[i] - m_zold[i] + fz[i] * m_dt * m_dt);
@@ -123,20 +107,22 @@ MolDyn::MolDyn(bool equilibrate, string old) {
 			}
 	
 			double t = 0.;
-  			for(int i=0; i<m_parts; ++i) 
+  			for(int i=0; i<m_npart; ++i) 
 				t += 0.5 * (m_vx[i]*m_vx[i] + m_vy[i]*m_vy[i] + m_vz[i]*m_vz[i]);
 			
-    		double T = (2./3.) * t / (double) m_parts; // temperatura
+    		double T = (2./3.) * t / (double) m_npart; // temperatura
 			double fscale = T / m_temp;
-			cout << fscale << endl;
+			scale.open("scale_factors.out", ios::app);
+			scale << fscale << endl;
+			scale.close();
 	
-			for(int i=0; i<m_parts; ++i) {
+			for(int i=0; i<m_npart; ++i) {
 				m_vx[i] /= sqrt(fscale);
 				m_vy[i] /= sqrt(fscale);
 				m_vz[i] /= sqrt(fscale);
 			}
 	
-  			for(int i=0; i<m_parts; ++i) {
+  			for(int i=0; i<m_npart; ++i) {
     			m_xold[i] = Pbc(xnew[i] - m_dt * m_vx[i]);
     			m_yold[i] = Pbc(ynew[i] - m_dt * m_vy[i]);
     			m_zold[i] = Pbc(znew[i] - m_dt * m_vz[i]);
@@ -149,23 +135,26 @@ MolDyn::MolDyn(bool equilibrate, string old) {
 	}
 }	
 
-MolDyn::~MolDyn() {
-	delete
-		m_x, m_y, m_z,
-		m_xold, m_yold, m_zold,
-		m_vx, m_vy, m_vz;
+NVE::~NVE() {
+	delete m_walker;
+	delete m_xold;
+	delete m_yold;
+	delete m_zold;
+	delete m_vx;
+	delete m_vy;
+	delete m_vz;
 }
 
-void MolDyn::Move() {
-  	double xnew, ynew, znew, fx[m_parts], fy[m_parts], fz[m_parts];
+void NVE::Move() {
+  	double xnew, ynew, znew, fx[m_npart], fy[m_npart], fz[m_npart];
 
-  	for(int i=0; i<m_parts; ++i) {
+  	for(int i=0; i<m_npart; ++i) {
     	fx[i] = Force(i, 0);
     	fy[i] = Force(i, 1);
     	fz[i] = Force(i, 2);
   	}
 
-  	for(int i=0; i<m_parts; ++i) {
+  	for(int i=0; i<m_npart; ++i) {
     	xnew = Pbc(2. * m_x[i] - m_xold[i] + fx[i] * m_dt * m_dt);
     	ynew = Pbc(2. * m_y[i] - m_yold[i] + fy[i] * m_dt * m_dt);
     	znew = Pbc(2. * m_z[i] - m_zold[i] + fz[i] * m_dt * m_dt);
@@ -182,54 +171,14 @@ void MolDyn::Move() {
     	m_y[i] = ynew;
     	m_z[i] = znew;
 	}
-  	
-	return;
 }
 
-void MolDyn::Measure() {
-  	double v = 0., t = 0.;
-  	ofstream measure;
-
-  	measure.open("measure.out", ios::app);
-
-	// energia potenziale
-  	for(int i=0; i<m_parts-1; ++i) {
-    	for(int j=i+1; j<m_parts; ++j) {
-     		double dx = Pbc(m_xold[i] - m_xold[j]); // here I use old configurations [old = r(t)]
-     		double dy = Pbc(m_yold[i] - m_yold[j]); // to be compatible with EKin which uses v(t)
-     		double dz = Pbc(m_zold[i] - m_zold[j]); // => EPot should be computed with r(t)
-
-     		double dr = dx*dx + dy*dy + dz*dz;
-     		dr = sqrt(dr);
-
-     		if(dr < m_rcut) {
-       			double vij = 4./pow(dr, 12) - 4./pow(dr, 6);
-				v += vij;
-			}
-		}          
-	}
-
-	// energia cinetica
-  	for(int i=0; i<m_parts; ++i) 
-		t += 0.5 * (m_vx[i] * m_vx[i] + m_vy[i] * m_vy[i] + m_vz[i] * m_vz[i]);
-   
-    double stima_epot = v / (double) m_parts;
-    double stima_ekin = t / (double) m_parts; 
-    double stima_temp = (2./3.) * t / (double) m_parts; 
-    double stima_etot = (t + v) / (double) m_parts;
-    	
-	measure << stima_temp << "\t" << stima_etot << "\t"
-			<< stima_ekin << "\t" << stima_epot << "\n";
-
-	measure.close();
-    return;
-}
-
-void MolDyn::Measure(double stime[4]) {
+void NVE::Measure() {
   	double v = 0., t = 0.;
 
-  	for(int i=0; i<m_parts-1; ++i) {
-    	for(int j=i+1; j<m_parts; ++j) {
+	// potential energy
+  	for(int i=0; i<m_npart-1; ++i) {
+    	for(int j=i+1; j<m_npart; ++j) {
      		double dx = Pbc(m_xold[i] - m_xold[j]);
      		double dy = Pbc(m_yold[i] - m_yold[j]);
      		double dz = Pbc(m_zold[i] - m_zold[j]);
@@ -244,27 +193,21 @@ void MolDyn::Measure(double stime[4]) {
 		}          
 	}
 
-  	for(int i=0; i<m_parts; ++i) 
+	// kinectic energy
+  	for(int i=0; i<m_npart; ++i) 
 		t += 0.5 * (m_vx[i] * m_vx[i] + m_vy[i] * m_vy[i] + m_vz[i] * m_vz[i]);
    
-    double stima_epot = v / (double) m_parts;
-    double stima_ekin = t / (double) m_parts; 
-    double stima_temp = (2./3.) * t / (double) m_parts; 
-    double stima_etot = (t + v) / (double) m_parts;
-    	
-	stime[0] = stima_temp;
-	stime[1] = stima_etot;
-	stime[2] = stima_ekin;
-	stime[3] = stima_epot;
-
-    return;
+    m_walker[0] = v / (double) m_npart;
+    m_walker[1] = t / (double) m_npart; 
+    m_walker[2] = (2./3.) * t / (double) m_npart; 
+    m_walker[3] = (t + v) / (double) m_npart;
 }
 
-void MolDyn::ConfFinal(string conf, string old) {
+void NVE::ConfFinal(string conf, string old) {
 	ofstream write;
 
   	write.open(conf);
-  	for(int i=0; i<m_parts; ++i) {
+  	for(int i=0; i<m_npart; ++i) {
     	write << m_x[i]/m_box << "\t" 
 		      << m_y[i]/m_box << "\t" 
 		      << m_z[i]/m_box << "\n";
@@ -272,7 +215,7 @@ void MolDyn::ConfFinal(string conf, string old) {
   	write.close();
 
   	write.open(old);
-  	for(int i=0; i<m_parts; ++i) {
+  	for(int i=0; i<m_npart; ++i) {
     	write << m_xold[i]/m_box << "\t" 
 	          << m_yold[i]/m_box << "\t" 
 			  << m_zold[i]/m_box << "\n";
@@ -282,11 +225,11 @@ void MolDyn::ConfFinal(string conf, string old) {
   	return;
 }
 
-double MolDyn::Force(int ip, int idir) {
+double NVE::Force(int ip, int idir) {
   	double f = 0.;
   	double dvec[3];
 
-  	for(int i=0; i<m_parts; ++i) {
+  	for(int i=0; i<m_npart; ++i) {
     	if(i != ip) {
       		dvec[0] = Pbc(m_x[ip] - m_x[i]);
       		dvec[1] = Pbc(m_y[ip] - m_y[i]);
@@ -302,18 +245,4 @@ double MolDyn::Force(int ip, int idir) {
   	}
   
   	return f;
-}
-
-double MolDyn::Pbc(double r) { 
-    	return r - m_box * rint(r / m_box);
-}
-
-ifstream MolDyn::openfile(string file) {
-	ifstream read;
-	read.open(file);
-	if(!read.is_open()) {
-		cerr << "Error: unable to open " << file << endl;
-		exit(0);
-	}
-	return read;
 }
