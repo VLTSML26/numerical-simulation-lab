@@ -21,6 +21,9 @@ class Random {
   	Random();
   	~Random() {;}
 
+	int Get_counter() {return m_counter;}
+	void Set_counter(int counter) {m_counter = counter;}
+
   	void SetRandom(int*, int, int);
   	void SaveSeed();
   	double Rannyu(void);
@@ -29,6 +32,8 @@ class Random {
   	double Exp(double);
   	double Lorentz(double, double);
   	double Line();
+	void Metropolis(double[], int, double, double (*)(double[]), std::string);
+	void Tune(double[], int, double&, double (*)(double[]), std::string);
   	bool Bool();
 
 	private :
@@ -36,6 +41,7 @@ class Random {
   	int m_m1, m_m2, m_m3, m_m4,
 		m_l1, m_l2, m_l3, m_l4,
 		m_n1, m_n2, m_n3, m_n4;
+	int m_counter, m_equilibrate;
 
 	std::ifstream openfile(std::string);
 };

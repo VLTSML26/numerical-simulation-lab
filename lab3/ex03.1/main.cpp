@@ -8,7 +8,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
-#include "Random.h"
+#include "../../Random/Random.h"
 #include <iostream>
 #include <fstream>
 #include <string>

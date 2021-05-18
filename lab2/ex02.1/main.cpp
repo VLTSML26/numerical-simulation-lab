@@ -8,7 +8,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
-#include "Random.h"
+#include "../../Random/Random.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -23,7 +23,7 @@ int main() {
   	const int N_throws = 10000;
   	const int N_blocks = 100;
 	
-  	ofstream write("ex02.1.1b.out"); // uniforme
+  	ofstream write("ex02.1.1.out"); // uniforme
 	for(int i=0; i<N_blocks; i++) {
      	double sum = 0.;
      	for(int j=0; j<N_throws; j++) {
@@ -36,7 +36,7 @@ int main() {
 	}
 	write.close();
 	
-  	ofstream write2("ex02.1.2b.out"); // p(x) = 2(1-x)
+  	ofstream write2("ex02.1.2.out"); // p(x) = 2(1-x)
 	for(int i=0; i<N_blocks; i++) {
      	double sum = 0.;
      	for(int j=0; j<N_throws; j++) {

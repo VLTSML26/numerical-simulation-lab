@@ -17,6 +17,8 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 using namespace std;
 
 Random::Random() {
+	m_counter = 0;
+	m_equilibrate = 1000000;
   	m_m1 = 502;
   	m_m2 = 1521;
   	m_m3 = 4071;
@@ -24,12 +26,12 @@ Random::Random() {
   	m_n1 = 0;
   	m_n2 = 0;
 
-	ifstream read = openfile("Primes");
+	ifstream read = openfile("../../Random/Primes");
 	read >> m_n3 >> m_n4;
 	read.close();
 
 	string property;
-	read = openfile("seed.in");
+	read = openfile("../../Random/seed.in");
 	while(!read.eof()) {
 		read >> property;
 		if(property == "RANDOMSEED")
@@ -46,12 +48,10 @@ Random::Random() {
 
 void Random::SaveSeed() {
    	ofstream WriteSeed;
-   	WriteSeed.open("seed.out");
-   	if (WriteSeed.is_open()) {
-      	WriteSeed << m_l1 << "\t" << m_l2 << "\t" << m_l3 << "\t" << m_l4 << endl;;
-	} 
-	else 
-		cerr << "PROBLEM: Unable to open random.out" << endl;
+   	WriteSeed.open("../../Random/seed.out");
+   	if (WriteSeed.is_open()){
+      	WriteSeed << m_l1 << " " << m_l2 << " " << m_l3 << " " << m_l4 << endl;;
+   	} else cerr << "PROBLEM: Unable to open random.out" << endl;
   	WriteSeed.close();
   	return;
 }
@@ -80,6 +80,51 @@ double Random::Lorentz(double mu, double gamma) {
 double Random::Line() {
 	double s = Rannyu();
 	return 1 - sqrt(1 - s);
+}
+
+void Random::Metropolis(double xn[], int dim, double delta, double (*p)(double[]), string s) {
+	double y[dim];
+	if(s == "Uniform") {
+		for(int i=0; i<dim; i++)
+			y[i] = Rannyu(xn[i] - delta, xn[i] + delta);
+	} else if(s == "Gauss") {
+		for(int i=0; i<dim; i++)
+			y[i] = Gauss(xn[i], delta);
+	} else {
+		cout << "For now, Metropolis can function only with <Uniform> and <Gauss> sampling" << endl;
+		return;
+	}
+	
+	double alpha = p(y) / p(xn);
+	if(alpha >= Rannyu()) {
+		m_counter ++;
+		for(int i=0; i<dim; i++) {
+			xn[i] = y[i];
+		}	
+	}
+	return;
+}
+
+void Random::Tune(double xn[], int dim, double& delta, double (*p)(double[]), string s) {
+	double x[dim];
+	bool half = true;
+
+	do {
+		for(int idir=0; idir<dim; idir++)
+			x[idir] = xn[idir];
+		m_counter = 0;
+		for(int i=0; i<m_equilibrate; i++)
+			Metropolis(x, dim, delta, p, s);
+		double rate = (double) m_counter / m_equilibrate;
+		cout << rate << "\t" << delta << endl;
+		if(rate > 0.50005)
+			delta += 0.001; // fine tuning, better start with 0.1 when no idea of right delta
+		else if(rate < 0.49995)
+			delta -= 0.001;
+		else half = false;
+	} while(half);
+
+	return;
 }
 
 bool Random::Bool() {
