@@ -19,6 +19,7 @@ class Random {
 	public :
 
   	Random();
+	Random(std::string);
   	~Random() {;}
 
 	int Get_counter() {return m_counter;}

@@ -16,7 +16,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
-Random::Random() {
+Random::Random(string seed) {
 	m_counter = 0;
 	m_equilibrate = 1000000;
   	m_m1 = 502;
@@ -31,7 +31,7 @@ Random::Random() {
 	read.close();
 
 	string property;
-	read = openfile("../../Random/seed.in");
+	read = openfile(seed);
 	while(!read.eof()) {
 		read >> property;
 		if(property == "RANDOMSEED")
@@ -45,6 +45,8 @@ Random::Random() {
   	m_l4 = m_l4 % 4096;
   	m_l4 = 2 * (m_l4/2) + 1;
 }
+
+Random::Random() : Random("../../Random/seed.in") {}
 
 void Random::SaveSeed() {
    	ofstream WriteSeed;
@@ -98,9 +100,8 @@ void Random::Metropolis(double xn[], int dim, double delta, double (*p)(double[]
 	double alpha = p(y) / p(xn);
 	if(alpha >= Rannyu()) {
 		m_counter ++;
-		for(int i=0; i<dim; i++) {
+		for(int i=0; i<dim; i++)
 			xn[i] = y[i];
-		}	
 	}
 	return;
 }
@@ -116,7 +117,7 @@ void Random::Tune(double xn[], int dim, double& delta, double (*p)(double[]), st
 		for(int i=0; i<m_equilibrate; i++)
 			Metropolis(x, dim, delta, p, s);
 		double rate = (double) m_counter / m_equilibrate;
-		cout << rate << "\t" << delta << endl;
+//		cout << rate << "\t" << delta << endl;
 		if(rate > 0.50005)
 			delta += 0.001; // fine tuning, better start with 0.1 when no idea of right delta
 		else if(rate < 0.49995)
