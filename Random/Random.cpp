@@ -84,7 +84,7 @@ double Random::Line() {
 	return 1 - sqrt(1 - s);
 }
 
-void Random::Metropolis(double xn[], int dim, double delta, double (*p)(double[]), string s) {
+void Random::Metropolis(double xn[], int dim, double delta, function<double(double[])> p, string s) {
 	double y[dim];
 	if(s == "Uniform") {
 		for(int i=0; i<dim; i++)
@@ -106,7 +106,7 @@ void Random::Metropolis(double xn[], int dim, double delta, double (*p)(double[]
 	return;
 }
 
-void Random::Tune(double xn[], int dim, double& delta, double (*p)(double[]), string s) {
+void Random::Tune(double xn[], int dim, double& delta, function<double(double[])> p, string s) {
 	double x[dim];
 	bool half = true;
 
@@ -118,9 +118,9 @@ void Random::Tune(double xn[], int dim, double& delta, double (*p)(double[]), st
 			Metropolis(x, dim, delta, p, s);
 		double rate = (double) m_counter / m_equilibrate;
 //		cout << rate << "\t" << delta << endl;
-		if(rate > 0.50005)
+		if(rate > 0.51)
 			delta += 0.001; // fine tuning, better start with 0.1 when no idea of right delta
-		else if(rate < 0.49995)
+		else if(rate < 0.49)
 			delta -= 0.001;
 		else half = false;
 	} while(half);

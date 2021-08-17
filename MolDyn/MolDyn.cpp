@@ -14,10 +14,10 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
-MolDyn::MolDyn() {
+MolDyn::MolDyn(string folder) {
 
-	ifstream read = openfile("../input/input.dat");
-	read >> m_temp >> m_npart >> m_rho >> m_rcut >> m_dt >> m_blocks >> m_throws;
+	ifstream read = openfile(folder + "/input.dat");
+	read >> m_temp >> m_npart >> m_rho >> m_rcut >> m_dt >> m_blocks >> m_throws >> m_nbins;
 	read.close();
 
 	double vol = (double) m_npart / m_rho;

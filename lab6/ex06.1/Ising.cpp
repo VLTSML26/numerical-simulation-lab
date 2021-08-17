@@ -18,34 +18,41 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
-Ising::Ising(bool metropolis, double t) {
+Ising::Ising(bool metropolis, double t, double h) {
 
 	m_props = 4;
 	m_metro = metropolis;
 	m_temp = t;
+	m_h = h;
 
 	ifstream read = openfile("input.dat");
-	read >> m_nspin >> m_J >> m_h >> m_nblk >> m_nstep >> m_equi;
+	read >> m_nspin >> m_J >> m_nblk >> m_nstep >> m_equi;
 	m_beta = 1. / m_temp;
 	read.close();
 
 	m_s = new double[m_nspin];
-	for(int i=0; i<m_nspin; ++i) {
-		if(m_rnd.Rannyu() >= 0.5) 
-			m_s[i] = 1;
-		else 
-			m_s[i] = -1;
+	ifstream config;
+	config.open("config.final");
+	if(!config.is_open()) {
+		for(int i=0; i<m_nspin; ++i) {
+			if(m_rnd.Rannyu() >= 0.5) 
+				m_s[i] = 1;
+			else 
+				m_s[i] = -1;
+		}
+	} else {
+		m_rnd = Random("../../Random/seed.out");
+		for(int i=0; i<m_nspin; ++i)
+			config >> m_s[i];
 	}
 
 	// 0 - Energy
 	// 1 - Heat Capacity
-	// 2 - Magnetization
-	// 3 - Magnetic susceptibility
+	// 2 - Magnetic susceptibility
+	// 3 - Magnetization
 	m_walker = new double[m_props];
 	for(int i=0; i<m_props; ++i)
 			m_walker[i] = 0.;
-  
-	Measure();
 }
 
 Ising::~Ising() {
@@ -92,8 +99,8 @@ void Ising::Measure() {
 
 	m_walker[0] = u;
 	m_walker[1] = u * u;
-	m_walker[2] = s;
-	m_walker[3] = m_beta * s * s;
+	m_walker[2] = m_beta * s * s;
+	m_walker[3] = s;
 }
 
 void Ising::Reset(int iblk) {
@@ -131,10 +138,10 @@ void Ising::Averages(int iblk) {
 	
 	double e = blk_av[0] / blk_norm / (double) m_nspin;
 	double c = m_beta * m_beta * (blk_av[1] / blk_norm / (double) m_nspin - (double) m_nspin * e * e);
-	double M = blk_av[2] / blk_norm / (double) m_nspin;
-	double chi = blk_av[3] / blk_norm / (double) m_nspin;
+	double chi = blk_av[2] / blk_norm / (double) m_nspin;
+	double M = blk_av[3] / blk_norm / (double) m_nspin;
 
-	write << e << "\t" << c << "\t" << M << "\t" << chi << endl;
+	write << e << "\t" << c << "\t" << chi << "\t" << M << endl;
     write.close();
 }
 

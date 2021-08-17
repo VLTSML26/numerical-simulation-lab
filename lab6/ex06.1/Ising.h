@@ -11,19 +11,18 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 #ifndef _Ising_h_
 #define _Ising_h_
 
-#include "Random.h"
+#include "../../Random/Random.h"
 
 class Ising {
 
 	public:
 
 	Ising();
-	Ising(bool, double);
+	Ising(bool, double, double);
 	~Ising();
 
 	int Get_step() {return m_nstep;}
 	int Get_blk() {return m_nblk;}
-	int Get_h() {return m_h;}
 
 	void Reset(int);
 	void Accumulate();

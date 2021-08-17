@@ -208,11 +208,10 @@ void NVE::Measure() {
   	for(int i=0; i<m_npart; ++i) 
 		t += 0.5 * (m_vx[i] * m_vx[i] + m_vy[i] * m_vy[i] + m_vz[i] * m_vz[i]);
    
-	// NOTA BENE: dividevo per (double) m_npart, ora lo faccio nel main!
-    m_walker[0] = v;
-    m_walker[1] = t;
-    m_walker[2] = (2./3.) * t;
-    m_walker[3] = (t + v);
+    m_walker[0] = v / (double) m_npart;
+    m_walker[1] = t / (double) m_npart; 
+    m_walker[2] = (2./3.) * t / (double) m_npart; 
+    m_walker[3] = (t + v) / (double) m_npart;
 }
 
 void NVE::ConfFinal(string conf, string old) {

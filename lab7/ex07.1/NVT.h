@@ -8,29 +8,33 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
-#ifndef _NVE_h_
-#define _NVE_h_
+#ifndef _NVT_h_
+#define _NVT_h_
 
+#include "../../Random/Random.h"
 #include "../../MolDyn/MolDyn.h"
 
-class NVE : public MolDyn {
+class NVT : public MolDyn {
 
 	public :
 
-	NVE(std::string, bool, std::string old = std::string());
-   	~NVE();
+	NVT();
+	~NVT();
 
 	virtual void Move();
 	virtual void Measure();
 
-	double Force(int, int);
-	void ConfFinal(std::string, std::string);
+	int Get_accepted() {return m_accepted;}
+
+	void ConfFinal();
+	void Tune(int);
+	void Measure(double[]);
+	double Boltzmann(double, double, double, int);
 
 	private :
 
-	double (*m_xold), (*m_yold), (*m_zold), // xold
-		   (*m_vx), (*m_vy), (*m_vz); // v
-
+	int m_nbins, m_accepted;
+	double m_beta, m_vtail, m_ptail, m_binsize;
 };
 
 #endif

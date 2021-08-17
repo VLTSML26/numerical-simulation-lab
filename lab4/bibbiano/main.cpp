@@ -20,8 +20,8 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	int iprint = 10000;
-	int imove = 100;
+	int iprint = 1000;
+	int imove = 10;
 	bool equilibrate, block;
 	string old;
 	string folder = "../input";
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
 			// the first 4 elements of sum are the observables, need to divide by nthrows
 			// no need to divide the remaining m_props - 4, used for g(r)
 			for(int k=0; k<4; ++k)
-				sum[k] /= (double) (sim.Get_throws() * sim.Get_npart());
+				sum[k] /= sim.Get_throws();
 			// print results
 			for(int k=0; k<sim.Get_props(); ++k)
 				write_blocks << sum[k] << stampa[k];

@@ -19,7 +19,7 @@ class MolDyn {
 	
 	public :
 	
-	MolDyn();
+	MolDyn(std::string);
 	~MolDyn();
 
 	virtual void Move() = 0;
@@ -35,7 +35,7 @@ class MolDyn {
 	protected :
 
 	Random m_rnd;
-	int m_npart, m_blocks, m_throws, m_props;
+	int m_npart, m_blocks, m_throws, m_props, m_nbins;
 	double m_temp, m_rcut, m_dt, m_box, m_rho;
 	double (*m_x), (*m_y), (*m_z), (*m_walker);
 

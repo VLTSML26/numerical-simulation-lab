@@ -20,22 +20,26 @@ template<class T>double distance(T*);
 double psi_100(double[]);
 double psi_210(double[]);
 
-int main() {
+int main(int argc, char* argv[]) {
+
+	// checking correct number of inputs from ./
+  	if(argc<2) {
+	  	cerr << "Usage: " << argv[0] << " <psi_100 starting r> <psi_210 starting r>\n";
+		return 1;
+	}
 
 	Random rnd;
 	ofstream write_blocks, write_points;
 
-  	const int N_throws = 100000; // in order to visualize the psi_210 orbital is better to have less points, e.g. N_throws = 10^4
+  	const int N_throws = 1000000; // in order to visualize the psi_210 orbital is better to have less points, e.g. N_throws = 10^4
   	const int N_blocks = 100;
 
 	string sampling[2] = {"Uniform", "Gauss"};
 
-	double x[2][3];
-	for(int m=0; m<2; m++) {
-		for(int n=0; n<3; n++) {
-			x[m][n] = 1.5;
-		}
-	}
+	double x[2][3] = {0.};
+	for(int m=0; m<2; m++)
+		x[m][0] = atof(argv[1]);
+
 	double delta[2] = {1.22, 0.76};
 
 	cout << "====== PSI_100 ======" << endl;
@@ -63,9 +67,9 @@ int main() {
 	write_points.close();
 
 	for(int m=0; m<2; m++) {
-		for(int n=0; n<3; n++) {
-			x[m][n] = 5.;
-		}
+		for(int n=1; n<3; n++)
+			x[m][n] = 0.;
+		x[m][0] = atof(argv[2]);
 	}
 	delta[0] = 2.97;
 	delta[1] = 1.87;

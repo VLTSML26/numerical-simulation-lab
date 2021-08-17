@@ -12,6 +12,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 #define _Random_h_
 
 #include <string>
+#include <functional>
 #include <fstream>
 
 class Random {
@@ -33,8 +34,8 @@ class Random {
   	double Exp(double);
   	double Lorentz(double, double);
   	double Line();
-	void Metropolis(double[], int, double, double (*)(double[]), std::string);
-	void Tune(double[], int, double&, double (*)(double[]), std::string);
+	void Metropolis(double[], int, double, std::function<double(double[])>, std::string);
+	void Tune(double[], int, double&, std::function<double(double[])>, std::string);
   	bool Bool();
 
 	private :
