@@ -28,10 +28,15 @@ int main() {
 	vector<City> cities;
 	vector<Individual> ind;
 
+  	ofstream pos ("cities.out");
+  	ofstream best ("best.out");
+  	ofstream worst ("worst.out");
+
 	for(int i=0; i<N_cities; ++i) {
 		double theta = rnd.Rannyu(0, 2*M_PI);
 		City c(cos(theta), sin(theta), i);
 		cities.push_back(c);
+		pos	<< c.Get_x() << "\t" << c.Get_y() << endl;
 	}
 
 	for(int i=0; i<N_individuals; ++i) {
@@ -39,10 +44,17 @@ int main() {
 		ind.push_back(io);
 	}
 
-	Population p(ind, rnd);
+	Population p(ind, rnd, N_cities);
 
-	for(int i=0; i<N_generations; ++i)
+	for(int i=0; i<N_generations; ++i) {
 		p.Evolve();
+		//cout << p.m_ind[0].Cost() << endl;
+	}
+
+	for(int i=0; i<N_cities; ++i) {
+		best << p.m_ind[0].m_city[i].Get_label() << endl;
+		worst << p.m_ind[N_individuals - 1].m_city[i].Get_label() << endl;
+	}
 
 	return 0;
 }

@@ -26,7 +26,7 @@ class City {
 	City(double x, double y, int label) {m_x = x; m_y = y; m_label = label;}
 	~City() {;}
 
-	double Distance(City);
+	double Distance(const City&) const;
 
 	double Get_x() {return m_x;}
 	double Get_y() {return m_y;}
@@ -58,9 +58,9 @@ class Individual {
 		}
 	} 
 
-	double Cost();
+	double Cost() const;
 	void Swap(int, int);
-	bool operator<(Individual&);
+	bool operator<(const Individual&);
 
 	std::vector<City> m_city;
 
@@ -70,18 +70,18 @@ class Population {
 
 	public :
 
-	Population(std::vector<Individual> ind, Random &rnd) : m_rnd{rnd} {m_ind = ind; m_p = 3.; m_pcross = 0.5; m_pmutate = 0.1;}
+	Population(std::vector<Individual> ind, Random &rnd, int cities) : m_ind{ind}, m_rnd{rnd}, m_ncities{cities} {m_p = 3.; m_pcross = 0.5; m_pmutate = 0.1; std::sort(m_ind.begin(), m_ind.end());}
 
 	void Evolve();
 	void Crossover(Individual, Individual, Individual&, Individual&);
+	void Mutate(Individual&);
+	std::vector<Individual> m_ind;
 
 	private :
 
-	std::vector<Individual> m_ind;
-	Individual Mutate(Individual);
-	int Select();
-	int m_ncities;
 	Random &m_rnd;
+	size_t Select();
+	int m_ncities;
 	double m_p, m_pcross, m_pmutate;
 
 };

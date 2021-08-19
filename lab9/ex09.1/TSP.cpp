@@ -9,19 +9,20 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************/
 
 #include "TSP.h"
+#include <iostream>
 
 using namespace std;
 
-double City::Distance(City c) {
+double City::Distance(const City &c) const {
 	double x = c.m_x - m_x;
 	double y = c.m_y - m_y;
 	return x*x + y*y; // tolto sqrt
 }
 
-double Individual::Cost() {
-	double distance = 0.;
-	for(auto &c : m_city)
-		distance += c.Distance(*(&c+1));
+double Individual::Cost() const {
+	double distance = m_city[m_city.size()].Distance(m_city[0]);
+	for(size_t i=0; i<m_city.size()-1; ++i)
+		distance += m_city[i].Distance(m_city[i+1]);
 	return distance;
 }
 
@@ -33,30 +34,39 @@ bool City::operator==(const City &city) {
 	return m_label == city.m_label;
 }
 
-bool Individual::operator<(Individual &ind) {
+bool Individual::operator<(const Individual &ind) {
 	return Cost() < ind.Cost();
 }
 
-int Population::Select() {
+size_t Population::Select() {
 	double r = m_rnd.Rannyu(); 
-	int index = (int) (m_ind.size() * pow(r, m_p));
+	size_t index = (size_t) (m_ind.size() * pow(r, m_p));
 	return index;
 }
 
-Individual Population::Mutate(Individual ind) {
-	if(m_rnd.Rannyu() < m_pmutate) {
-		int a = (int) (1 + (m_ncities - 1) * m_rnd.Rannyu());
-		int b = (int) (1 + (m_ncities - 1) * m_rnd.Rannyu());
+void Population::Mutate(Individual &ind) {
+//	if(m_rnd.Rannyu() < m_pmutate) {
+		int a = (int) (m_rnd.Rannyu(1, m_ncities));
+		int b = (int) (m_rnd.Rannyu(1, m_ncities));
+//		cout << "prima " << ind.m_city[a].Get_label() << " " << ind.m_city[b].Get_label() << endl;
 		ind.Swap(a, b);
+//		cout << "dopo " << ind.m_city[a].Get_label() << " " << ind.m_city[b].Get_label() << endl;
+//	}
+	if(m_rnd.Rannyu() < m_pmutate) {
+		int a = (int) (m_rnd.Rannyu(1, m_ncities));
+		int b = (int) (m_rnd.Rannyu(1, m_ncities));
+		if(b > a) 
+			reverse(ind.m_city.begin() + a, ind.m_city.begin() + b);
+		else
+			reverse(ind.m_city.begin() + b, ind.m_city.begin() + a);
 	}
-	return ind;
 }
 
 void Population::Crossover(Individual p1, Individual p2, Individual &s1, Individual &s2) {
 	s1 = p1;
 	s2 = p2;
-	if(m_rnd.Rannyu() < m_pcross) {
-		int cut = (int) (1 + (m_ncities - 1) * m_rnd.Rannyu());
+//	if(m_rnd.Rannyu() < m_pcross) {
+		int cut = (int) (m_rnd.Rannyu(1, m_ncities - 1));
 		int index = cut;
 		for(int i=0; i<m_ncities; ++i) {
 			City c = p2.m_city[i];
@@ -73,7 +83,7 @@ void Population::Crossover(Individual p1, Individual p2, Individual &s1, Individ
 				index++;
 			}
 		}
-	}
+//	}
 }
 
 void Population::Evolve() {
@@ -83,8 +93,8 @@ void Population::Evolve() {
 		Individual p2 = m_ind[Select()];
 		Individual s1, s2;
 		Crossover(p1, p2, s1, s2);
-		s1 = Mutate(s1);
-		s2 = Mutate(s2);
+		Mutate(s1);
+		Mutate(s2);
 		new_gen.push_back(s1);
 		new_gen.push_back(s2);
 	}
