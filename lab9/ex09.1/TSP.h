@@ -22,8 +22,8 @@ class City {
 
 	public :
 
-	City() {m_x = 0; m_y = 0;}
-	City(double x, double y) {m_x = x; m_y = y;}
+	City() {m_x = 0; m_y = 0; m_label = 0;}
+	City(double x, double y, int label) {m_x = x; m_y = y; m_label = label;}
 	~City() {;}
 
 	double Distance(City);
@@ -31,6 +31,7 @@ class City {
 	double Get_x() {return m_x;}
 	double Get_y() {return m_y;}
 	int Get_label() {return m_label;}
+	bool operator==(const City&);
 
 	private :
 
@@ -43,13 +44,23 @@ class Individual {
 
 	public :
 	
-	Individual(std::vector<City> city) {m_city = city;}
+	Individual() {;}
+	Individual(std::vector<City> c, Random &rnd) {
+		m_city.push_back(c[0]);
+		for(size_t i=1; i<c.size(); ++i) {
+			for(;;) {
+				City appo = c[rnd.Rannyu(1., c.size())];
+				if(std::find(m_city.begin() + 1, m_city.end(), appo) == m_city.end()) {
+					m_city.push_back(appo);
+					break;
+				}
+			}
+		}
+	} 
 
 	double Cost();
 	void Swap(int, int);
 	bool operator<(Individual&);
-
-	private :
 
 	std::vector<City> m_city;
 
@@ -59,9 +70,10 @@ class Population {
 
 	public :
 
-	Population(std::vector<Individual> ind) {m_ind = ind;}
+	Population(std::vector<Individual> ind, Random &rnd) : m_rnd{rnd} {m_ind = ind; m_p = 3.; m_pcross = 0.5; m_pmutate = 0.1;}
 
 	void Evolve();
+	void Crossover(Individual, Individual, Individual&, Individual&);
 
 	private :
 
@@ -69,7 +81,7 @@ class Population {
 	Individual Mutate(Individual);
 	int Select();
 	int m_ncities;
-	Random m_rnd;
+	Random &m_rnd;
 	double m_p, m_pcross, m_pmutate;
 
 };

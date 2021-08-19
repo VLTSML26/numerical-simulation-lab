@@ -29,6 +29,10 @@ void Individual::Swap(int a, int b) {
 	swap(m_city[a], m_city[b]);
 }
 
+bool City::operator==(const City &city) {
+	return m_label == city.m_label;
+}
+
 bool Individual::operator<(Individual &ind) {
 	return Cost() < ind.Cost();
 }
@@ -45,24 +49,45 @@ Individual Population::Mutate(Individual ind) {
 		int b = (int) (1 + (m_ncities - 1) * m_rnd.Rannyu());
 		ind.Swap(a, b);
 	}
+	return ind;
 }
 
 void Population::Crossover(Individual p1, Individual p2, Individual &s1, Individual &s2) {
-	int cut = (int) (1 + (m_ncities - 1) * m_rnd.Rannyu());
-	int index = cut;
-	for(int i=0; i<m_ncities; ++i) {
-		if(find(
+	s1 = p1;
+	s2 = p2;
+	if(m_rnd.Rannyu() < m_pcross) {
+		int cut = (int) (1 + (m_ncities - 1) * m_rnd.Rannyu());
+		int index = cut;
+		for(int i=0; i<m_ncities; ++i) {
+			City c = p2.m_city[i];
+			if(find(p1.m_city.begin(), p1.m_city.begin() + cut, c) == p1.m_city.begin() + cut) {
+				s1.m_city[index] = c;
+				index++;
+			}
+		}
+		index = cut;
+		for(int i=0; i<m_ncities; ++i) {
+			City c = p1.m_city[i];
+			if(find(p2.m_city.begin(), p2.m_city.begin() + cut, c) == p2.m_city.begin() + cut) {
+				s2.m_city[index] = c;
+				index++;
+			}
+		}
+	}
+}
 
 void Population::Evolve() {
 	vector<Individual> new_gen;
-	for(int i=0; i<m_ind.size(); ++i) {
-		// p stands for parent
+	for(size_t i=0; i<m_ind.size()/2; ++i) {
 		Individual p1 = m_ind[Select()];
 		Individual p2 = m_ind[Select()];
-	//	if(m_rnd.Rannyu() < m_pcross) Crossover();
-		Individual son1 = Mutate(p1);
-		Individual son2 = Mutate(p2);
+		Individual s1, s2;
+		Crossover(p1, p2, s1, s2);
+		s1 = Mutate(s1);
+		s2 = Mutate(s2);
+		new_gen.push_back(s1);
+		new_gen.push_back(s2);
 	}
-	//sort(m_ind)
+	sort(new_gen.begin(), new_gen.end());
+	m_ind = new_gen;
 }
-
