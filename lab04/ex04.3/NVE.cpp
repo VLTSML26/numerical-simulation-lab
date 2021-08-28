@@ -115,7 +115,7 @@ NVE::NVE(string folder, bool equilibrate, string old) : MolDyn(folder) {
 			
     		double T = (2./3.) * t / (double) m_npart; // temperatura
 			double fscale = T / m_temp;
-			scale.open("scale_factors.out", ios::app);
+			scale.open("data/scale_factors.out", ios::app);
 			scale << fscale << endl;
 			scale.close();
 	

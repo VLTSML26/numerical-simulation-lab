@@ -18,17 +18,14 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
-NVE::NVE(string folder, bool equilibrate, string old) : MolDyn(folder) {
+NVE::NVE(bool equilibrate, string old) : MolDyn() {
 
-	m_props = 4 + m_nbins;
+	m_props = 4;
 
 	// 0 - Potential Energy
 	// 1 - Kinectic Energy
 	// 2 - Temperature
 	// 3 - Total Energy
-	// 4 - 1st bin g(r)
-	// ...
-	// 4 + m_nbin - last bin g(r)
 	m_walker = new double[m_props];
 	for(int i=0; i<m_props; ++i)
 			m_walker[i] = 0.;
@@ -115,7 +112,7 @@ NVE::NVE(string folder, bool equilibrate, string old) : MolDyn(folder) {
 			
     		double T = (2./3.) * t / (double) m_npart; // temperatura
 			double fscale = T / m_temp;
-			scale.open("scale_factors.out", ios::app);
+			scale.open("data/scale_factors.out", ios::app);
 			scale << fscale << endl;
 			scale.close();
 	
@@ -139,7 +136,6 @@ NVE::NVE(string folder, bool equilibrate, string old) : MolDyn(folder) {
 }	
 
 NVE::~NVE() {
-	delete m_walker;
 	delete m_xold;
 	delete m_yold;
 	delete m_zold;
@@ -179,24 +175,16 @@ void NVE::Move() {
 void NVE::Measure() {
   	double v = 0., t = 0.;
 
-	for(int k=0; k<m_props; ++k)
-		m_walker[k] = 0.;
-
+	// potential energy
   	for(int i=0; i<m_npart-1; ++i) {
     	for(int j=i+1; j<m_npart; ++j) {
      		double dx = Pbc(m_xold[i] - m_xold[j]);
      		double dy = Pbc(m_yold[i] - m_yold[j]);
      		double dz = Pbc(m_zold[i] - m_zold[j]);
+
      		double dr = dx*dx + dy*dy + dz*dz;
      		dr = sqrt(dr);
-			// g(r)
-			if(m_nbins > 0) {
-				if(dr < m_box / 2.) {
-					int bin = (int) (2 * dr * m_nbins / m_box);
-					m_walker[4 + bin] += 2;
-				}
-			}
-			// potential energy
+
      		if(dr < m_rcut) {
        			double vij = 4./pow(dr, 12) - 4./pow(dr, 6);
 				v += vij;

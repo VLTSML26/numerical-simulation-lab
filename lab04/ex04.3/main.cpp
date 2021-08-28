@@ -8,6 +8,9 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
+#define iprint	10000
+#define imove	100
+
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
@@ -20,8 +23,6 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	int iprint = 10000;
-	int imove = 100;
 	bool equilibrate, block;
 	string old;
 	string folder = "../input";
@@ -60,7 +61,6 @@ int main(int argc, char* argv[]) {
 		stampa[k] = '\t';
 	stampa[sim.Get_props()-1] = '\n';
 	
-	// iprint = 10^3 nsteps = 10^3
   	for(int i=1; i <= sim.Get_blocks(); ++i) {
 		double sum[sim.Get_props()] = {0.};
 		for(int j=1; j <= sim.Get_throws(); ++j) {

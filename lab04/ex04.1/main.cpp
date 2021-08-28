@@ -8,6 +8,8 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
+#define nstep	10000
+
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
@@ -19,7 +21,6 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	int nstep = 10000;
   	const char stampa[4] = {'\t', '\t', '\t', '\n'};
 	bool equilibrate;
 	string old;
@@ -48,7 +49,7 @@ int main(int argc, char* argv[]) {
 	
 	// start simulation 
 	NVE sim(equilibrate, old);
-	ofstream write("measure.out", ios::app);
+	ofstream write("data/measure.out", ios::app);
 
   	for(int i=1; i <= nstep; ++i) {
 		sim.Move();
