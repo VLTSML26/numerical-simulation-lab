@@ -8,10 +8,12 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
+#define N_throws	1000000 // in order to visualize the psi_210 orbital is better to have less points, e.g. N_throws = 10^4
+#define N_blocks	100
+
 #include "../../Random/Random.h"
 #include <iostream>
 #include <fstream>
-#include <string>
 #include <cmath>
 
 using namespace std;
@@ -20,22 +22,23 @@ template<class T>double distance(T*);
 double psi_100(double[]);
 double psi_210(double[]);
 
-int main() {
+int main(int argc, char* argv[]) {
+
+	// checking correct number of inputs from ./
+  	if(argc<2) {
+	  	cerr << "Usage: " << argv[0] << " <psi_100 starting r> <psi_210 starting r>\n";
+		return 1;
+	}
 
 	Random rnd;
 	ofstream write_blocks, write_points;
 
-  	const int N_throws = 100000; // in order to visualize the psi_210 orbital is better to have less points, e.g. N_throws = 10^4
-  	const int N_blocks = 100;
-
 	string sampling[2] = {"Uniform", "Gauss"};
 
-	double x[2][3];
-	for(int m=0; m<2; m++) {
-		for(int n=0; n<3; n++) {
-			x[m][n] = 1.5;
-		}
-	}
+	double x[2][3] = {0.};
+	for(int m=0; m<2; m++)
+		x[m][0] = atof(argv[1]);
+
 	double delta[2] = {1.22, 0.76};
 
 	cout << "====== PSI_100 ======" << endl;
@@ -44,8 +47,8 @@ int main() {
 		cout << "Tuned " << sampling[m] << " with value delta = " << delta[m] << endl;
 	}
 
-	write_blocks.open("psi_100.out");
-	write_points.open("psi_100_points.out");
+	write_blocks.open("data/psi_100.out");
+	write_points.open("data/psi_100_points.out");
    	for(int i=0; i<N_blocks; i++) {
 		double sum[2] = {0.};
 		for(int j=0; j<N_throws; j++) {
@@ -63,9 +66,9 @@ int main() {
 	write_points.close();
 
 	for(int m=0; m<2; m++) {
-		for(int n=0; n<3; n++) {
-			x[m][n] = 5.;
-		}
+		for(int n=1; n<3; n++)
+			x[m][n] = 0.;
+		x[m][0] = atof(argv[2]);
 	}
 	delta[0] = 2.97;
 	delta[1] = 1.87;
@@ -76,8 +79,8 @@ int main() {
 		cout << "Tuned " << sampling[m] << " with value delta = " << delta[m] << endl;
 	}
 
-	write_blocks.open("psi_210.out");
-	write_points.open("psi_210_points.out");
+	write_blocks.open("data/psi_210.out");
+	write_points.open("data/psi_210_points.out");
    	for(int i=0; i<N_blocks; i++) {
 		double sum[2] = {0.};
 		for(int j=0; j<N_throws; j++) {

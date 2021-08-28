@@ -45,13 +45,11 @@ size_t Population::Select() {
 }
 
 void Population::Mutate(Individual &ind) {
-//	if(m_rnd.Rannyu() < m_pmutate) {
+	if(m_rnd.Rannyu() < m_pmutate) {
 		int a = (int) (m_rnd.Rannyu(1, m_ncities));
 		int b = (int) (m_rnd.Rannyu(1, m_ncities));
-//		cout << "prima " << ind.m_city[a].Get_label() << " " << ind.m_city[b].Get_label() << endl;
 		ind.Swap(a, b);
-//		cout << "dopo " << ind.m_city[a].Get_label() << " " << ind.m_city[b].Get_label() << endl;
-//	}
+	}
 	if(m_rnd.Rannyu() < m_pmutate) {
 		int a = (int) (m_rnd.Rannyu(1, m_ncities));
 		int b = (int) (m_rnd.Rannyu(1, m_ncities));
@@ -60,12 +58,17 @@ void Population::Mutate(Individual &ind) {
 		else
 			reverse(ind.m_city.begin() + b, ind.m_city.begin() + a);
 	}
+	if(m_rnd.Rannyu() < m_pmutate) {
+		vector<int> x = {(int) m_rnd.Rannyu(1, m_ncities), (int) m_rnd.Rannyu(1, m_ncities), (int) m_rnd.Rannyu(1, m_ncities)};
+		sort(x.begin(), x.end());
+		rotate(ind.m_city.begin() + x[0], ind.m_city.begin() + x[1], ind.m_city.begin() + x[2]);
+	}
 }
 
 void Population::Crossover(Individual p1, Individual p2, Individual &s1, Individual &s2) {
 	s1 = p1;
 	s2 = p2;
-//	if(m_rnd.Rannyu() < m_pcross) {
+	if(m_rnd.Rannyu() < m_pcross) {
 		int cut = (int) (m_rnd.Rannyu(1, m_ncities - 1));
 		int index = cut;
 		for(int i=0; i<m_ncities; ++i) {
@@ -83,7 +86,7 @@ void Population::Crossover(Individual p1, Individual p2, Individual &s1, Individ
 				index++;
 			}
 		}
-//	}
+	}
 }
 
 void Population::Evolve() {

@@ -79,6 +79,14 @@ double Random::Lorentz(double mu, double gamma) {
 	return mu + x * gamma;
 }
 
+void Random::Spherical3D(double r, double x[]) {
+	double theta = Rannyu(0, M_PI);
+	double phi = Rannyu(0, 2*M_PI);
+	x[0] = r * sin(theta) * cos(phi);
+	x[1] = r * sin(theta) * sin(phi);
+	x[2] = r * cos(theta);
+}
+
 double Random::Line() {
 	double s = Rannyu();
 	return 1 - sqrt(1 - s);
@@ -105,7 +113,28 @@ void Random::Metropolis(double xn[], int dim, double delta, function<double(doub
 	}
 	return;
 }
-
+/*
+template <class T> void Random::Metropolis(T &xn, T &y, double delta, function<double(double[])> p, string s) {
+	if(s == "Uniform") {
+		for(int i=0; i<dim; i++)
+			y[i] = Rannyu(xn[i] - delta, xn[i] + delta);
+	} else if(s == "Gauss") {
+		for(int i=0; i<dim; i++)
+			y[i] = Gauss(xn[i], delta);
+	} else {
+		cout << "For now, Metropolis can function only with <Uniform> and <Gauss> sampling" << endl;
+		return;
+	}
+	
+	double alpha = p(y) / p(xn);
+	if(alpha >= Rannyu()) {
+		m_counter ++;
+		for(int i=0; i<dim; i++)
+			xn[i] = y[i];
+	}
+	return;
+}
+*/
 void Random::Tune(double xn[], int dim, double& delta, function<double(double[])> p, string s) {
 	double x[dim];
 	bool half = true;

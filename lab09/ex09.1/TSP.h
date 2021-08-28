@@ -70,7 +70,13 @@ class Population {
 
 	public :
 
-	Population(std::vector<Individual> ind, Random &rnd, int cities) : m_ind{ind}, m_rnd{rnd}, m_ncities{cities} {m_p = 3.; m_pcross = 0.5; m_pmutate = 0.1; std::sort(m_ind.begin(), m_ind.end());}
+	Population(std::vector<Individual> ind, Random &rnd, int cities) :	m_ind{ind}, m_rnd{rnd},	m_ncities{cities} 
+																		{
+																			m_p = 4.; 
+																			m_pcross = 0.75;
+																			m_pmutate = 0.5;
+																			std::sort(m_ind.begin(), m_ind.end());
+																		}
 
 	void Evolve();
 	void Crossover(Individual, Individual, Individual&, Individual&);

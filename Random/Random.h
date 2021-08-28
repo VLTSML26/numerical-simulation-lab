@@ -34,6 +34,7 @@ class Random {
   	double Exp(double);
   	double Lorentz(double, double);
   	double Line();
+	void Spherical3D(double, double[]);
 	void Metropolis(double[], int, double, std::function<double(double[])>, std::string);
 	void Tune(double[], int, double&, std::function<double(double[])>, std::string);
   	bool Bool();
