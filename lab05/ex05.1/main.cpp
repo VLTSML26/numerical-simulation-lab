@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 	string sampling[2] = {"Uniform", "Gauss"};
 	double delta[2] = {1.22, 0.76};
 	double r = atof(argv[1]);
-	string type = argv[2];
+	string type = argv[3];
 
 	double x[2][3];
 	for(int m=0; m<2; m++)
@@ -49,7 +49,8 @@ int main(int argc, char* argv[]) {
 			for(int m=0; m<2; m++) {
 				sum[m] += sqrt(distance<double>(x[m]));
 				rnd.Metropolis(x[m], 3, delta[m], psi_100, sampling[m]);
-				write_points << x[0] << "\t" << x[1] << "\t" << x[2] << endl; 
+				if(j % 1000 == 0)
+					write_points << x[m][0] << "\t" << x[m][1] << "\t" << x[m][2] << endl; 
 			}
 		}
 		for(int m=0; m<2; m++)
@@ -59,11 +60,10 @@ int main(int argc, char* argv[]) {
 	write_blocks.close();
 	write_points.close();
 
-	for(int m=0; m<2; m++) {
-		for(int n=0; n<3; n++) {
-			x[m][n] = 5.;
-		}
-	}
+	r = atof(argv[2]);
+	for(int m=0; m<2; m++)
+		rnd.Spherical3D(r, x[m]);
+
 	delta[0] = 2.97;
 	delta[1] = 1.87;
 
@@ -81,7 +81,8 @@ int main(int argc, char* argv[]) {
 			for(int m=0; m<2; m++) {
 				sum[m] += sqrt(distance<double>(x[m]));
 				rnd.Metropolis(x[m], 3, delta[m], psi_210, sampling[m]);
-				write_points << x[0] << "\t" << x[1] << "\t" << x[2] << endl; 
+				if(j % 100 == 0)
+					write_points << x[m][0] << "\t" << x[m][1] << "\t" << x[m][2] << endl; 
 			}
 		}
 		for(int m=0; m<2; m++)
