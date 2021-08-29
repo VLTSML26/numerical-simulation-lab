@@ -48,4 +48,5 @@ class Ising {
 	double blk_av[4], blk_norm;
 
 };
+
 #endif

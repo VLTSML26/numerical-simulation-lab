@@ -134,7 +134,7 @@ void Ising::Averages(int iblk) {
 			name = "gibbs_extfield.out";
 	}
 	ofstream write;
-    write.open(name, ios::app);
+    write.open("data/" + name, ios::app);
 	
 	double e = blk_av[0] / blk_norm / (double) m_nspin;
 	double c = m_beta * m_beta * (blk_av[1] / blk_norm / (double) m_nspin - (double) m_nspin * e * e);
