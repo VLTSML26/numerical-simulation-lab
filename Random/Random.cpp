@@ -91,7 +91,7 @@ double Random::Line() {
 	double s = Rannyu();
 	return 1 - sqrt(1 - s);
 }
-
+/*
 void Random::Metropolis(double xn[], int dim, double delta, function<double(double[])> p, string s) {
 	double y[dim];
 	if(s == "Uniform") {
@@ -113,32 +113,12 @@ void Random::Metropolis(double xn[], int dim, double delta, function<double(doub
 	}
 	return;
 }
-/*
-template <class T> void Random::Metropolis(T &xn, T &y, double delta, function<double(double[])> p, string s) {
-	if(s == "Uniform") {
-		for(int i=0; i<dim; i++)
-			y[i] = Rannyu(xn[i] - delta, xn[i] + delta);
-	} else if(s == "Gauss") {
-		for(int i=0; i<dim; i++)
-			y[i] = Gauss(xn[i], delta);
-	} else {
-		cout << "For now, Metropolis can function only with <Uniform> and <Gauss> sampling" << endl;
-		return;
-	}
-	
-	double alpha = p(y) / p(xn);
-	if(alpha >= Rannyu()) {
-		m_counter ++;
-		for(int i=0; i<dim; i++)
-			xn[i] = y[i];
-	}
-	return;
-}
-*/
+
 void Random::Tune(double xn[], int dim, double& delta, function<double(double[])> p, string s) {
 	double x[dim];
 	bool half = true;
 
+	cout << "============ TUNING METROPOLIS ============" << endl;
 	do {
 		for(int idir=0; idir<dim; idir++)
 			x[idir] = xn[idir];
@@ -146,7 +126,7 @@ void Random::Tune(double xn[], int dim, double& delta, function<double(double[])
 		for(int i=0; i<m_equilibrate; i++)
 			Metropolis(x, dim, delta, p, s);
 		double rate = (double) m_counter / m_equilibrate;
-//		cout << rate << "\t" << delta << endl;
+		cout << "rate: " << rate << "\tdelta: " << delta << endl;
 		if(rate > 0.51)
 			delta += 0.001; // fine tuning, better start with 0.1 when no idea of right delta
 		else if(rate < 0.49)
@@ -156,7 +136,7 @@ void Random::Tune(double xn[], int dim, double& delta, function<double(double[])
 
 	return;
 }
-
+*/
 bool Random::Bool() {
 	double s = Rannyu(0,2);
 
