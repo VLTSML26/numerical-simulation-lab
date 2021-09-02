@@ -8,6 +8,9 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
+#define N_throws	100000
+#define N_blocks	100
+
 #include "../../Random/Random.h"
 #include <iostream>
 #include <fstream>
@@ -30,9 +33,6 @@ int main() {
 		double psi = psi_T(x[0], mu, sigma);
 		return psi * psi;
 	};
-
-  	const int N_throws = 100000;
-  	const int N_blocks = 100;
 
 	double delta = 2.365; // tuned with Random::Tune
 	double x = 1.5;

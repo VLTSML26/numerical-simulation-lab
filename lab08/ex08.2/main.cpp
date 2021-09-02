@@ -8,6 +8,14 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
+#define N_grid		50
+#define N_blocks	100
+
+#define mu_min		0.5
+#define mu_max		1.0
+#define sigma_min	0.5
+#define sigma_max	1.0
+
 #include "../../Random/Random.h"
 #include <iostream>
 #include <fstream>
@@ -19,96 +27,72 @@ using namespace std;
 double psi_T(double, double, double);
 double V(double);
 double D2_psi(double, double, double);
-/*double Dmu_psi(double, double, double);
-double Dsigma_psi(double, double, double);
-double Dmu_D2_psi(double, double, double);
-double Dsigma_D2_psi(double, double, double);
-double Dmu_H(double, double, double);
-double Dsigma_H(double, double, double);
-*/
 
-int main() {
+int main(int argc, char *argv[]) {
 
 	Random rnd;
 	ofstream write;
-
-	const double mu_min = 1.;
-	const double mu_max = 5.;
-	const double sigma_min = 1.;
-	const double sigma_max = 5.;
-	const int N_grid = 300;
-	const int N_steps = 10000;
-  	const int N_throws = 100000;
-  	const int N_blocks = 100;
-
-	cout << "ciao" << endl;
-	double delta = 3.525; // tuned with Random::Tune with values of mu_min and sigma_min
+	double mu, sigma;
 	double x = 1.5;
-
-	double mu = mu_min;
-	double sigma = sigma_min;
-	auto psi_T2 = [mu, sigma](double x[]) {
-		double psi = psi_T(x[0], mu, sigma);
-		return psi * psi;
-	};
-	rnd.Tune(&x, 1, delta, psi_T2, "Uniform");
-	cout << delta << endl;
-
-	cout << "ciao" << endl;
-	write.open("grid.out");
-	for(int i=0; i<N_grid; ++i) {
-		mu += (mu_max - mu_min) / N_grid;
+	double delta = 1.72;	// tuned with Random::Tune<double>, now commented, with values of mu_min and sigma_min
+							// note that you require to define Psi_T2 in order to tune again
+	if(string{argv[1]} == "Grid") {
+		const int N_throws = 1000;
+		write.open("data/ex08.2_grid.out");
+		mu = mu_min;
 		sigma = sigma_min;
-		cout << i << endl;
-		for(int j=0; j<N_grid; ++j) {
-			sigma += (sigma_max - sigma_min) / N_grid;
-//			rnd.Tune(&x, 1, delta, psi_T2, "Uniform");
-			double H = 0.;
-			for(int k=0; k<N_steps; ++k) {
-				rnd.Metropolis(&x, 1, delta, psi_T2, "Uniform");
-				H += (-0.5 * D2_psi(x, mu, sigma)) / psi_T(x, mu, sigma) + V(x);
+		double mu_step = (mu_max - mu_min) / N_grid;
+		double sigma_step = (sigma_max - sigma_min) / N_grid;
+		for(int i=0; i<N_grid; ++i) {
+			mu = mu_min + i * mu_step;
+			for(int j=0; j<N_grid; ++j) {
+				sigma = sigma_min + j * sigma_step;
+				for(int k=0; k<N_blocks; ++k) {
+					auto psi_T2 = [mu, sigma](double x[]) {
+						double psi = psi_T(*x, mu, sigma);
+						return psi * psi;
+					};
+					// I thought about tuning every time, in order to maintain acceptance rate. It is simply too expensive
+					//rnd.Tune<double>(&x, 1, delta, psi_T2, "Uniform");
+					double H = 0.;
+					for(int l=0; l<N_throws; ++l) {
+						rnd.Metropolis<double>(&x, 1, delta, psi_T2, "Uniform");
+						H += (-0.5 * D2_psi(x, mu, sigma)) / psi_T(x, mu, sigma) + V(x);
+					}
+					H /= N_throws;
+					write << H << "\t";
+				}
+				write << endl;
 			}
-			H /= N_steps;
-			write << mu << "\t" << sigma << "\t" << H << endl;
 		}
 	}
-	write.close();
+	else if(string{argv[1]} == "Sample") {
+		const int N_throws = 10000;
+		write.open("data/ex08.2_measure.out");
+		ofstream sample("data/ex08.2_sample.out");
+		mu = atof(argv[2]);
+		sigma = atof(argv[3]);
+		cout << mu << "\t" << sigma << endl;
+		auto psi_T2 = [mu, sigma](double x[]) {
+			double psi = psi_T(*x, mu, sigma);
+			return psi * psi;
+		};
+		for(int i=0; i<N_blocks; ++i) {
+			double H = 0.;
+			for(int j=0; j<N_throws; ++j) {
+				rnd.Metropolis<double>(&x, 1, delta, psi_T2, "Uniform");
+				H += (-0.5 * D2_psi(x, mu, sigma)) / psi_T(x, mu, sigma) + V(x);
+				sample << x << endl;
+			}
+			H /= N_throws;
+			write << H << endl;
+		}
+	}
+	else {
+		cerr << "Usage: " << argv[0] << "<Grid/Sample>" << endl;
+		return -1;
+	}
 
-	/*
-	// gradient descent
-	int i = 0;
-	double Dmu, Dsigma;
-	do {
-		Dmu = 0.;
-	   	Dsigma = 0.;
-		for(int j=0; j<N_steps; ++j) {
-			rnd.Metropolis(&x, 1, delta, psi_T2, "Uniform");
-			Dmu += Dmu_H(x, mu, sigma);
-			Dsigma += Dsigma_H(x, mu, sigma);
-		}
-		Dmu /= N_steps;
-		Dsigma /= N_steps;
-		mu += Dmu * rate;
-		sigma += Dsigma * rate;
-		cout << i << "\t" << Dmu << "\t" << Dsigma << endl;
-		i++;
-		cout << (i<N_max) << endl;
-		cout << (Dmu > 1e-3 or Dsigma > 1e-3) << endl;
-	} while(i<N_max and (Dmu > 0.001 or Dsigma > 0.001));
-*/
-	/*
-	write_blocks.open("ex08.2.out");
-   	for(int i=0; i<N_blocks; i++) {
-		double sum = 0.;
-		for(int j=0; j<N_throws; j++) {
-			sum += (-0.5 * D2_psi(x, mu, sigma)) / psi_T(x, mu, sigma) + V(x);
-			rnd.Metropolis(&x, 1, delta, psi_T2, "Uniform");
-		}
-		sum /= N_throws;
-		write_blocks << sum << endl;
-	}
-	write_blocks.close();
-*/
 	rnd.SaveSeed();
    	return 0;
 }
@@ -127,12 +111,12 @@ double V(double x) {
 }
 
 double D2_psi(double x, double mu, double sigma) {
-	double phi_p = x + mu;
-	double phi_m = x - mu;
-	double y = 0.5 / (sigma * sigma);
+	double phi_p = (x + mu) / sigma;
+	double phi_m = (x - mu) / sigma;
 	phi_p *= phi_p;
 	phi_m *= phi_m;
-	return (phi_m - 1.) * exp(-y * phi_m) + (phi_p - 1.) * exp(-y * phi_p);
+	double y = (phi_m - 1.) * exp(-0.5 * phi_m) + (phi_p - 1.) * exp(-0.5 * phi_p);
+	return y / (sigma * sigma);
 }
 /*
 double Dmu_psi(double x, double mu, double sigma) {
