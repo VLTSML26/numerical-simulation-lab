@@ -10,12 +10,12 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 #define N_throws	 10000
 #define N_blocks	 100
-#define N_path		 100 // per dividere l'intervallo [0, t1] in N_path bin di egual lunghezza (ex03.2)
-#define s0			 100. // asset price at t=0
-#define k			 100. // strike price
-#define sigma		 0.25 // volatility
-#define r			 0.1 // risk-free interest rate
-#define t1			 1. // delivery time
+#define N_path		 100	// in order to divide [0, t1] in N_path bins of equal lenght
+#define s0			 100.	// asset price at t=0
+#define k			 100.	// strike price
+#define sigma		 0.25	// volatility
+#define r			 0.1	// risk-free interest rate
+#define t1			 1.		// delivery time
 
 #include "../../Random/Random.h"
 #include <fstream>
@@ -25,12 +25,12 @@ using namespace std;
 
 int main() {
 
+	// initialize random and outputs
 	Random rnd;
-	ofstream write1("data/ex03.1.1.out");
-	ofstream write2("data/ex03.1.2.out");
+	ofstream direct("data/ex03.1_direct.out");
+	ofstream discretized("data/ex03.1_discretized.out");
 
-	// ==== EX03.1: DIRECT SAMPLE ====
-   	
+	// data blocking method using direct sample 
 	for(int i=0; i<N_blocks; ++i) {
      	double C_sum = 0.;
      	double P_sum = 0.;
@@ -39,17 +39,20 @@ int main() {
 			double s = s0 * exp((r - sigma*sigma/2.)*t1 + sigma*z*sqrt(t1));
 			s -= k;
 			if(s > 0) 
-				C_sum += s*exp(- r*t1); // il profitto per una Call è max(0, s - k) ovvero max(0, s)
+
+				// profit for a call is max(0, s-k), hence max(0, s)
+				C_sum += s*exp(- r*t1);
 			else 
-				P_sum += - s*exp(- r*t1); // il profitto per una Put è max(0, k - s) ovvero max(0, -s)
+
+				// profit for a put is max(0, k-s), hence max(0, -s)
+				P_sum += - s*exp(- r*t1);
 		}
 		C_sum /= N_throws;
 		P_sum /= N_throws;
-     	write1 << C_sum << "\t" << P_sum << endl;
+     	direct << C_sum << "\t" << P_sum << endl;
 	}
 
-	// ==== EX03.2: DISCRETIZED SAMPLE ====
-
+	// data blocking method using discretized sample 
 	for(int i=0; i<N_blocks; ++i) {
      	double C_sum = 0.;
      	double P_sum = 0.;
@@ -61,13 +64,17 @@ int main() {
 			}
 			s -= k;
 			if(s > 0) 
+
+				// profit for a call is max(0, s-k), hence max(0, s)
 				C_sum += s*exp(- r*t1);
 			else 
+
+				// profit for a put is max(0, k-s), hence max(0, -s)
 				P_sum += - s*exp(- r*t1);
 		}
 		C_sum /= N_throws;
 		P_sum /= N_throws;
-     	write2 << C_sum << "\t" << P_sum << endl;
+     	discretized << C_sum << "\t" << P_sum << endl;
 	}
    	
 	rnd.SaveSeed();
