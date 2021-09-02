@@ -16,7 +16,9 @@ using namespace std;
 double City::Distance(const City &c) const {
 	double x = c.m_x - m_x;
 	double y = c.m_y - m_y;
-	return x*x + y*y; // tolto sqrt
+
+	// returns the L1 distance: hence no sqrt
+	return x*x + y*y;
 }
 
 double Individual::Cost() const {
@@ -45,11 +47,15 @@ size_t Population::Select() {
 }
 
 void Population::Mutate(Individual &ind) {
+
+	// this mutation swaps two random cities
 	if(m_rnd.Rannyu() < m_pmutate) {
 		int a = (int) (m_rnd.Rannyu(1, m_ncities));
 		int b = (int) (m_rnd.Rannyu(1, m_ncities));
 		ind.Swap(a, b);
 	}
+
+	// this mutation inverts a group of contiguous cities
 	if(m_rnd.Rannyu() < m_pmutate) {
 		int a = (int) (m_rnd.Rannyu(1, m_ncities));
 		int b = (int) (m_rnd.Rannyu(1, m_ncities));
@@ -58,6 +64,8 @@ void Population::Mutate(Individual &ind) {
 		else
 			reverse(ind.m_city.begin() + b, ind.m_city.begin() + a);
 	}
+
+	// this mutation cycles a group of contiguous cities
 	if(m_rnd.Rannyu() < m_pmutate) {
 		vector<int> x = {(int) m_rnd.Rannyu(1, m_ncities), (int) m_rnd.Rannyu(1, m_ncities), (int) m_rnd.Rannyu(1, m_ncities)};
 		sort(x.begin(), x.end());

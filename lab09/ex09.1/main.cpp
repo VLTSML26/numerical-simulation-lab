@@ -9,7 +9,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************/
 
 #define N_cities		32
-#define N_individuals	6000
+#define N_individuals	5000
 #define N_generations	350
 
 #include "../../Random/Random.h"
@@ -23,21 +23,35 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 using namespace std;
 
 vector<City> Set(ofstream&, Random, string);
-void TSP(string, ofstream&, ofstream&, ofstream&, Random);
+void TSP(string, ofstream&, ofstream&, ofstream&, Random, double, double, double);
 double Accumulate(vector<Individual>);
 
 int main() {
 
-	Random rnd;													// initialize Random
-  	ofstream pos[2];											// output stream 
+	// initialize random
+	Random rnd;
+
+	// initialize ofstream for both circle and square TSP: the program prints
+	// 1 - the cities positions (pos)
+	// 2 - the best path between them (best)
+	// 3 - the cost of the best individual of the final generation
+  	ofstream pos[2];
 	ofstream best[2];
-	ofstream mean("mean.out");
-	string type[2] = {"circle", "square"};							// 
+	ofstream mean("data/mean.out");
+	string type[2] = {"circle", "square"};
+
+	// set the probabilities for each process
+	double exp[2] = {3., 4.};
+	double pcross[2] = {0.75, 0.6};
+	double pmutate[2] = {0.55, 0.05};
 	
+	// iterate over type = circle and type = square
 	for(int i=0; i<2; ++i) {
-		pos[i].open(type[i] + "_pos.out");
-		best[i].open(type[i] + "_best.out");
-		TSP(type[i], pos[i], best[i], mean, rnd);
+		pos[i].open("data/" + type[i] + "_pos.out");
+		best[i].open("data/" + type[i] + "_best.out");
+
+		// calls TSP algorithm
+		TSP(type[i], pos[i], best[i], mean, rnd, exp[i], pcross[i], pmutate[i]);
 		pos[i].close();
 		best[i].close();
 	}
@@ -45,6 +59,10 @@ int main() {
 	return 0;
 }
 
+/* 
+ * This function returns a vector<City> of randomly places
+ * cities on a type = "circle" or inside a type = "square".
+ */
 vector<City> Set(ofstream &pos, Random rnd, string type) {
 	vector<City> cities;
 
@@ -73,19 +91,28 @@ vector<City> Set(ofstream &pos, Random rnd, string type) {
 	return cities;
 }
 
-void TSP(string type, ofstream &pos, ofstream& best, ofstream &mean, Random rnd) {
-	vector<City> cities = Set(pos, rnd, type);						// see function above
+/*
+ * This function implements the Traveling Salesman Algorithm
+ * and cools the system every N_generations.
+ */
+void TSP(string type, ofstream &pos, ofstream& best, ofstream &mean, Random rnd, double exp, double pcross, double pmutate) {
 
-	vector<Individual> ind;											// initialize vector of individuals to start a population
+	// set cities (type = circle or type = square)
+	vector<City> cities = Set(pos, rnd, type);
+
+	// initialize vector of N_individuals individuals
+	vector<Individual> ind;
 	for(int i=0; i<N_individuals; ++i) {							
-		Individual io(cities, rnd);									// fill vector of individuals
+		Individual io(cities, rnd);
 		ind.push_back(io);
 	}
 
-	Population p(ind, rnd, N_cities);								// start population
+	// generate population
+	Population p(ind, rnd, N_cities, exp, pcross, pmutate);
 
+	// evolve population for N_generations times
 	for(int i=0; i<N_generations; ++i) {
-		p.Evolve();													// evolve population N_generatons times
+		p.Evolve();
 		mean << Accumulate(p.m_ind) << "\t" << p.m_ind[0].Cost() << endl;
 	}
 
