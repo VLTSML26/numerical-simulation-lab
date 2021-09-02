@@ -19,10 +19,12 @@ using namespace std;
  
 int main() {
 
+	// initialize random and outputs
 	Random rnd;
   	ofstream unif("data/ex02.1_uniforme.out");
-  	ofstream linear("data/ex02.1_lineare.out"); // p(x) = 2(1-x)
+  	ofstream linear("data/ex02.1_lineare.out");
 
+	// data blocking method with uniform sampling
 	for(int i=0; i<N_blocks; i++) {
      	double sum = 0.;
      	for(int j=0; j<N_throws; j++) {
@@ -34,9 +36,12 @@ int main() {
      	unif << sum << endl;
 	}
 	
+	// data blocking method with importance sampling
 	for(int i=0; i<N_blocks; i++) {
      	double sum = 0.;
-     	for(int j=0; j<N_throws; j++) {
+     	for(int j=0; j<N_throws; j++) { 
+
+			// p(x) = 2(1-x)
        		double ran = rnd.Line();
        		double y = (M_PI / 2 * cos(M_PI / 2 * ran)) / (2 * (1 - ran));
 			sum += y;
