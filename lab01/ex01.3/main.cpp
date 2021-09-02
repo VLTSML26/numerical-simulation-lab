@@ -21,22 +21,35 @@ using namespace std;
  
 int main() {
 
+	// initialize random and output
 	Random rnd;
   	ofstream write("data/ex01.3.out");
 
+	// data blocking method for pi with Buffon's experiment
 	for(int i=0; i<N_blocks; ++i){
      	int hit = 0;
      	for(int j=0; j<N_throws; ++j){
+
+			// sets first endpoint of the needle
        		double x1 = rnd.Rannyu(0., d);
+
+			// generates a random angle theta WITHOUT USING pi
+			// (note that y is always positive)
        		double x, y, theta;
        		do {
        			x = rnd.Rannyu();
        			y = rnd.Rannyu();
        		} while (x*x + y*y > 1.);
-      		theta = acos(x/sqrt(x*x + y*y)); // NB: y sempre >= 0
+      		theta = acos(x/sqrt(x*x + y*y));
+
+			// sets second endpoint of the needle
        		double x2 = x1 + l*sin(theta);
+
+			// checks if it hit
        		if(x2 < 0. or x2 > d) hit++;
      	}
+		
+		// find pi from Buffon's formula
 		double pi = 2*l*N_throws / (hit*d);
      	write << pi << endl;
 	}	

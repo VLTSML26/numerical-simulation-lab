@@ -18,15 +18,19 @@ using namespace std;
  
 int main() {
 
+	// initialize random and outputs
 	Random rnd;
-
-  	const int Ns[4] = {1, 2, 10, 100};
-  	const char stampa[4] = {'\t', '\t', '\t', '\n'};
-
   	ofstream write1 ("data/ex01.2_uniform.out"); 
   	ofstream write2 ("data/ex01.2_exponential.out");
   	ofstream write3 ("data/ex01.2_lorentz.out");
 
+	// different values of N required
+  	const int Ns[4] = {1, 2, 10, 100};
+
+	// just a trick in order to do the job in one cycle
+  	const char stampa[4] = {'\t', '\t', '\t', '\n'};
+
+	// sampling data from the added distributions
    	for(int i=0; i<N_throws; ++i) {
      	for(int j=0; j<4; ++j) {
        		double U_sum = 0.;
