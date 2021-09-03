@@ -18,6 +18,9 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
+/*
+ * Constructor
+ */
 Ising::Ising(bool metropolis, double t, double h) {
 
 	m_props = 4;
@@ -25,14 +28,15 @@ Ising::Ising(bool metropolis, double t, double h) {
 	m_temp = t;
 	m_h = h;
 
-	ifstream read = openfile("input.dat");
+	// reads config data from input.dat
+	ifstream read = openfile("input/input.dat");
 	read >> m_nspin >> m_J >> m_nblk >> m_nstep >> m_equi;
 	m_beta = 1. / m_temp;
 	read.close();
 
 	m_s = new double[m_nspin];
 	ifstream config;
-	config.open("config.final");
+	config.open("input/config.final");
 	if(!config.is_open()) {
 		for(int i=0; i<m_nspin; ++i) {
 			if(m_rnd.Rannyu() >= 0.5) 
@@ -60,6 +64,9 @@ Ising::~Ising() {
 	delete m_walker;
 }
 
+/*
+ * This method uses Metropolis algorithm to sample the Boltzmann weight
+ */
 void Ising::Metropolis() {
 	int i = (int) m_rnd.Rannyu(0, m_nspin);
 	double alpha = exp(m_beta * Boltzmann(m_s[i], i));
@@ -67,6 +74,9 @@ void Ising::Metropolis() {
 		m_s[i] = - m_s[i];
 }
 
+/*
+ * This method uses Gibbs algorithm to sample the Boltzmann weight
+ */
 void Ising::Gibbs() {
 	int i = (int) m_rnd.Rannyu(0, m_nspin);
 	m_s[i] = 1;
@@ -84,6 +94,9 @@ void Ising::Move() {
 	}
 }
 
+/*
+ * This is the Boltzmann weight
+ */
 double Ising::Boltzmann(int sm, int ip) {
 	double ene = - m_J * sm * (m_s[Pbc(ip - 1)] + m_s[Pbc(ip + 1)]) - m_h * sm;
 	return 2 * ene;
@@ -103,6 +116,9 @@ void Ising::Measure() {
 	m_walker[3] = s;
 }
 
+/*
+ * Data blocking 
+ */
 void Ising::Reset(int iblk) {
    
 	for(int i=0; i<m_props; ++i)
@@ -111,6 +127,9 @@ void Ising::Reset(int iblk) {
 	blk_norm = 0;
 }
 
+/*
+ * Data blocking 
+ */
 void Ising::Accumulate() {
 
 	for(int i=0; i<m_props; ++i)
@@ -119,6 +138,9 @@ void Ising::Accumulate() {
 	blk_norm = blk_norm + 1.0;
 }
 
+/*
+ * Data blocking 
+ */
 void Ising::Averages(int iblk) {
     
 	string name;
@@ -134,7 +156,7 @@ void Ising::Averages(int iblk) {
 			name = "gibbs_extfield.out";
 	}
 	ofstream write;
-    write.open("data/" + name, ios::app);
+	write.open("data/" + name, ios::app);
 	
 	double e = blk_av[0] / blk_norm / (double) m_nspin;
 	double c = m_beta * m_beta * (blk_av[1] / blk_norm / (double) m_nspin - (double) m_nspin * e * e);
@@ -145,10 +167,13 @@ void Ising::Averages(int iblk) {
     write.close();
 }
 
+/*
+ * This method prints out the final spin configuration
+ */
 void Ising::ConfFinal() {
 
 	ofstream write;
-	write.open("config.final");
+	write.open("input/config.final");
 
 	for (int i=0; i<m_nspin; ++i)
 		write << m_s[i] << endl;
@@ -157,6 +182,9 @@ void Ising::ConfFinal() {
 	m_rnd.SaveSeed();
 }
 
+/*
+ * This method implements periodic boundary conditions
+ */
 int Ising::Pbc(int i) {
     if(i >= m_nspin) 
 		i -= m_nspin;
@@ -165,6 +193,10 @@ int Ising::Pbc(int i) {
     return i;
 }
 
+/*
+ * This method usually called at the beginning of the simulation
+ * equilibrates the system (ie the Metropolis/Gibbs algorithm)
+ */
 void Ising::Equilibrate() {
 	for(int i=0; i<m_equi; ++i)
 		Move();

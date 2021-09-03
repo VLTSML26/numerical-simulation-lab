@@ -1,0 +1,11 @@
+50
+1.0
+100
+10000
+1000000
+
+  read >> m_nspin;
+  read >> m_J;
+  read >> m_nblk;
+  read >> m_nstep;
+  read >> m_equi;
