@@ -5,7 +5,7 @@
 0.0005
 100
 1000
-0
+100
 
   read >> m_temp;
   read >> m_npart;

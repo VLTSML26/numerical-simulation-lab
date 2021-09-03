@@ -17,9 +17,10 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
-NVT::NVT() : MolDyn() {
+NVT::NVT(string folder) : MolDyn(folder) {
 
 	m_nbins = 100;
+	m_accepted = 0;
 	m_props = 2 + m_nbins;
 	m_beta = 1. / m_temp;
 	m_binsize = (m_box / 2.) / (double) m_nbins;
@@ -60,19 +61,37 @@ void NVT::Move() {
 	
 		double energy_new = Boltzmann(xnew,ynew,znew,k);
 	
-		double p = exp(m_beta*(energy_old-energy_new));
+		double p = exp(m_beta*(energy_old - energy_new));
 		if(p >= m_rnd.Rannyu()) {
 			m_x[k] = xnew;
 			m_y[k] = ynew;
 			m_z[k] = znew;
-			
+			m_accepted++;
 		}
 	}
 }
 
+void NVT::Tune(int n) {
+	bool half = true;
+	double rate = 0;
+	do {
+		m_accepted = 0;
+		for(int i=0; i<n; ++i)
+			Move();
+		rate = (double) m_accepted / (n * m_npart);
+		cout << m_dt << "\t" << rate << endl;
+		if(rate > 0.62)
+			m_dt *= 1.1;
+		else if(rate < 0.38)
+			m_dt *= 0.9;
+		else half = false;
+	} while(half);
+	m_accepted = 0;
+	cout << "Tuned with delta: " << m_dt << ". Acceptance rate: " << rate << endl;
+}
+
 double NVT::Boltzmann(double xx, double yy, double zz, int ip) {
 	double ene = 0.;
-	
 	for (int i=0; i<m_npart; ++i) {
 		if(i != ip) {
 			double dx = Pbc(xx - m_x[i]);
@@ -87,7 +106,6 @@ double NVT::Boltzmann(double xx, double yy, double zz, int ip) {
 			}
 		}
 	}
-
 	return 4.0 * ene;
 }
 
@@ -104,10 +122,12 @@ void NVT::Measure() {
 			double dz = Pbc(m_z[i] - m_z[j]);
 			double dr = dx*dx + dy*dy + dz*dz;
 			dr = sqrt(dr);
+			// g(r)
 			if(dr < m_box / 2.) {
 				int bin = (int) (2 * dr * m_nbins / m_box);
 				m_walker[2 + bin] += 2;
 			}
+			// properties
 			if(dr < m_rcut) {
 				double vij = 1. / pow(dr, 12) - 1. / pow(dr, 6);
 				double wij = 1. / pow(dr, 12) - 0.5 / pow(dr, 6);
@@ -121,10 +141,22 @@ void NVT::Measure() {
 	m_walker[1] = 48. * w / 3.;
 }
 
+/*
+ * This method is usually called after Measure() in order to
+ * add tail corrections and works also as a rescale of the bins'
+ * occupation number for a correct estimation of g(r)
+ */
 void NVT::Measure(double sum[]) {
 	double vol = (double) m_npart / m_rho;
 	sum[0] = sum[0] / m_throws / (double) m_npart + m_vtail;
     sum[1] = m_rho * m_temp + (sum[1] / m_throws + m_ptail * (double) m_npart) / vol;
+	for(int i=0; i<m_nbins; i++) {
+		double bin_size = (m_box / 2.0) / (double)m_nbins;
+		double r = i * bin_size;
+		double deltaV = 4. * M_PI/3. * (pow((r+bin_size), 3.) - pow(r, 3.));
+		double div = m_rho * m_npart * deltaV * m_throws;
+		sum[2 + i] /= div;
+	}
 }
 
 void NVT::ConfFinal() {

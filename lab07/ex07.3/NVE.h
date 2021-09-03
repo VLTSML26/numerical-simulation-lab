@@ -12,6 +12,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 #define _NVE_h_
 
 #include "../../MolDyn/MolDyn.h"
+#include <string>
 
 class NVE : public MolDyn {
 
@@ -23,11 +24,13 @@ class NVE : public MolDyn {
 	virtual void Move();
 	virtual void Measure();
 
+	void Gofr(double sum[]);
 	double Force(int, int);
 	void ConfFinal(std::string, std::string);
 
 	private :
 
+	std::string m_folder;
 	double (*m_xold), (*m_yold), (*m_zold), // xold
 		   (*m_vx), (*m_vy), (*m_vz); // v
 

@@ -17,7 +17,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
-NVT::NVT() : MolDyn() {
+NVT::NVT() : MolDyn("../input_NVT") {
 
 	m_nbins = 100;
 	m_accepted = 0;
@@ -61,7 +61,7 @@ void NVT::Move() {
 	
 		double energy_new = Boltzmann(xnew,ynew,znew,k);
 	
-		double p = exp(m_beta*(energy_old-energy_new));
+		double p = exp(m_beta*(energy_old - energy_new));
 		if(p >= m_rnd.Rannyu()) {
 			m_x[k] = xnew;
 			m_y[k] = ynew;
@@ -78,11 +78,12 @@ void NVT::Tune(int n) {
 		m_accepted = 0;
 		for(int i=0; i<n; ++i)
 			Move();
-		rate = (double) m_accepted / n / m_npart;
+		rate = (double) m_accepted / (n * m_npart);
+		cout << m_dt << "\t" << rate << endl;
 		if(rate > 0.62)
-			m_dt += 0.1;
+			m_dt *= 1.1;
 		else if(rate < 0.38)
-			m_dt -= 0.1;
+			m_dt *= 0.9;
 		else half = false;
 	} while(half);
 	m_accepted = 0;
@@ -91,7 +92,6 @@ void NVT::Tune(int n) {
 
 double NVT::Boltzmann(double xx, double yy, double zz, int ip) {
 	double ene = 0.;
-	
 	for (int i=0; i<m_npart; ++i) {
 		if(i != ip) {
 			double dx = Pbc(xx - m_x[i]);
@@ -106,7 +106,6 @@ double NVT::Boltzmann(double xx, double yy, double zz, int ip) {
 			}
 		}
 	}
-
 	return 4.0 * ene;
 }
 

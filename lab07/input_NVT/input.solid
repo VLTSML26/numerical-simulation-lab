@@ -1,0 +1,17 @@
+0.8
+108
+1.1
+2.2
+0.12
+100
+1000
+100
+
+  read >> m_temp;
+  read >> m_npart;
+  read >> m_rho;
+  read >> m_rcut;
+  read >> m_dt;
+  read >> m_blocks;
+  read >> m_throws;
+  read >> m_nbins;

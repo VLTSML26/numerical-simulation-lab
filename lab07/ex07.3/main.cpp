@@ -8,6 +8,8 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
+#define imove	10
+
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
@@ -20,19 +22,17 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-	int iprint = 1000;
-	int imove = 10;
+	// checks correct number of inputs from terminal and sets phase
+  	if(argc<3) {
+	  	cerr << "Usage: " << argv[0] << " <start/equilibrate/measure> <solid/liquid/gas>\n";
+		return 1;
+	}
+	string phase = argv[2];
+
+	// prepare simulation for start/equilibrate/measure
 	bool equilibrate, block;
 	string old;
 	string folder = "../input_NVE";
-	
-	// checking correct number of inputs from ./
-  	if(argc<2) {
-	  	cerr << "Usage: " << argv[0] << " start/equilibrate/measure\n";
-		return 1;
-	}
-
-	// choose start/equilibrate/measure
 	if(string(argv[1]) == "start") {
 		equilibrate = false;
 		block = false;
@@ -54,20 +54,24 @@ int main(int argc, char* argv[]) {
 	
 	// start simulation 
 	NVE sim(folder, equilibrate, old);
-	ofstream write_blocks("block_measure.out", ios::app);
+	ofstream write_blocks("data/ex07.3_" + phase + ".out");
   	char stampa[sim.Get_props()];
 	for(int k=0; k<sim.Get_props() - 1; ++k) 
 		stampa[k] = '\t';
 	stampa[sim.Get_props()-1] = '\n';
 	
-	// iprint = 10^3 nsteps = 10^3
+	int iprint = sim.Get_blocks() * sim.Get_throws() / 100;
   	for(int i=1; i <= sim.Get_blocks(); ++i) {
 		double sum[sim.Get_props()] = {0.};
 		for(int j=1; j <= sim.Get_throws(); ++j) {
+
 			// cute counter
+			/*
 			if((i*sim.Get_throws() + j) % iprint == 0) 
 				cout << (i*sim.Get_throws() + j)/iprint - 1 << "%\r";
 			cout.flush();
+			*/
+
 			// during measure phase (block average)
 			if(block) {
 				sim.Move();
@@ -75,6 +79,7 @@ int main(int argc, char* argv[]) {
 				for(int k=0; k<sim.Get_props(); ++k)
 					sum[k] += sim.walker(k);
 			}
+
 			// during start or equilibration phases one has to perform normal measures (not blk)
 			// in order check if the system has a good behavior
 			// since it is already done in the previous exercises, I leave it commented
@@ -88,6 +93,7 @@ int main(int argc, char* argv[]) {
 			// no need to divide the remaining m_props - 4, used for g(r)
 			for(int k=0; k<4; ++k)
 				sum[k] /= sim.Get_throws();
+			sim.Gofr(sum);
 			// print results
 			for(int k=0; k<sim.Get_props(); ++k)
 				write_blocks << sum[k] << stampa[k];

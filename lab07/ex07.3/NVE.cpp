@@ -21,6 +21,7 @@ using namespace std;
 NVE::NVE(string folder, bool equilibrate, string old) : MolDyn(folder) {
 
 	m_props = 4 + m_nbins;
+	m_folder = folder;
 
 	// 0 - Potential Energy
 	// 1 - Kinectic Energy
@@ -78,7 +79,7 @@ NVE::NVE(string folder, bool equilibrate, string old) : MolDyn(folder) {
 	}
 
 	else {
-  		ifstream read = openfile("../input/old.0");
+  		ifstream read = openfile(m_folder + "/old.0");
 		for(int j=0; j<m_npart; ++j) {
 			read >> m_xold[j] >> m_yold[j] >> m_zold[j];
 			m_xold[j] *= m_box; 
@@ -115,7 +116,7 @@ NVE::NVE(string folder, bool equilibrate, string old) : MolDyn(folder) {
 			
     		double T = (2./3.) * t / (double) m_npart; // temperatura
 			double fscale = T / m_temp;
-			scale.open("scale_factors.out", ios::app);
+			scale.open(m_folder + "/scale_factors.out", ios::app);
 			scale << fscale << endl;
 			scale.close();
 	
@@ -212,6 +213,16 @@ void NVE::Measure() {
     m_walker[1] = t / (double) m_npart; 
     m_walker[2] = (2./3.) * t / (double) m_npart; 
     m_walker[3] = (t + v) / (double) m_npart;
+}
+
+void NVE::Gofr(double sum[]) {
+	for(int i=0; i<m_nbins; i++) {
+		double bin_size = (m_box / 2.0) / (double)m_nbins;
+		double r = i * bin_size;
+		double deltaV = 4. * M_PI/3. * (pow((r+bin_size), 3.) - pow(r, 3.));
+		double div = m_rho * m_npart * deltaV * m_throws;
+		sum[4 + i] /= div;
+	}
 }
 
 void NVE::ConfFinal(string conf, string old) {
