@@ -18,7 +18,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
-NVE::NVE(bool equilibrate, string old) : MolDyn() {
+NVE::NVE(bool equilibrate, string old) : MolDyn("../input") {
 
 	m_props = 4;
 
@@ -62,7 +62,7 @@ NVE::NVE(bool equilibrate, string old) : MolDyn() {
    		}
    		sumv2 /= (double) m_npart;
 		
-   		double fs = sqrt(3 * m_temp / sumv2); // fs = fattore di scala velocità
+   		double fs = sqrt(3 * m_temp / sumv2); // fs = vel scale factor
    		for(int i=0; i<m_npart; ++i) {
      		m_vx[i] *= fs;
      		m_vy[i] *= fs;

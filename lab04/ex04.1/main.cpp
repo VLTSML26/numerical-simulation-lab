@@ -8,7 +8,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 *****************************************************************
 *****************************************************************/
 
-#define nstep	10000
+#define N_steps	10000
 
 #include <cstdlib>
 #include <iostream>
@@ -21,17 +21,15 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-  	const char stampa[4] = {'\t', '\t', '\t', '\n'};
-	bool equilibrate;
-	string old;
-
-	// checking correct number of inputs from ./
+	// check correct number of inputs from terminal
   	if(argc<2) {
 	  	cerr << "Usage: " << argv[0] << " start/equilibrate/measure\n";
 	  	return -1;
 	}
 
-	// choose start/equilibrate/measure
+	// prepare simulation for start/equilibrate/measure
+	bool equilibrate;
+	string old;
 	if(string(argv[1]) == "start") 
 		equilibrate = false;
 	else if(string(argv[1]) == "equilibrate") {
@@ -47,25 +45,34 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 	
-	// start simulation 
+	// start simulation and initialize output 
 	NVE sim(equilibrate, old);
 	ofstream write("data/measure.out", ios::app);
 
-  	for(int i=1; i <= nstep; ++i) {
+	// trick in order to get the job done in one for cycle
+  	const char stampa[4] = {'\t', '\t', '\t', '\n'};
+
+  	for(int i=1; i<=N_steps; ++i) {
 		sim.Move();
+
+		// it is not necessary to measure every time I move
+		// the system, since N_steps is very big
      	if(i%10 == 0) {
         	sim.Measure();
 			for(int k=0; k<4; ++k)
 				write << sim.walker(k) << stampa[k];
      	}
-		// cute counter
-		if(i%100 == 0) {
-			cout << i/100 << "%\r";
-			cout.flush();
-		}
+		
+		// cute counter (I leave it commented, it's not necessary)
+		/*if(i%100 == 0) {
+		 *	cout << i/100 << "%\r";
+		 *	cout.flush();
+		}*/
   	}
   	
 	cout << endl;
+
+	// print final configuration in order to restart
 	sim.ConfFinal("../input/config.final", "../input/old.final");
   	return 0;
 }
