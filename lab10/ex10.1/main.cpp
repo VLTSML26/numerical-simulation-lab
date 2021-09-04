@@ -39,7 +39,7 @@ int main() {
 	// 3 - the cost of the best individual of the final generation
   	ofstream pos[2];
 	ofstream best[2];
-	ofstream mean("data/mean.out");
+	ofstream mean[2];
 	string type[2] = {"circle", "square"};
 	double pmutate[2] = {0.1, 0.25};
 	
@@ -47,9 +47,10 @@ int main() {
 	for(int i=0; i<2; ++i) {
 		pos[i].open("data/" + type[i] + "_pos.out");
 		best[i].open("data/" + type[i] + "_best.out");
+		mean[i].open("data/" + type[i] + "_mean.out");
 
 		// calls TSP algorithm
-		TSP(type[i], pos[i], best[i], mean, rnd, Starting_BETA, pmutate[i]);
+		TSP(type[i], pos[i], best[i], mean[i], rnd, Starting_BETA, pmutate[i]);
 		pos[i].close();
 		best[i].close();
 	}
