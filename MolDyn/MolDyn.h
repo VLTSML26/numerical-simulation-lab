@@ -22,6 +22,8 @@ class MolDyn {
 	MolDyn(std::string);
 	~MolDyn();
 
+	// virtual methods will be implemented differently
+	// by NVE or NVT
 	virtual void Move() = 0;
 	virtual void Measure() = 0;
 	
@@ -30,8 +32,11 @@ class MolDyn {
 	int Get_props() {return m_props;}
 	int Get_blocks() {return m_blocks;}
 	double Pbc(double);
+
+	// walker is the array that contains measured observables
 	double walker(int k) {return m_walker[k];}
 	
+	// this is a virtual class, no private members
 	protected :
 
 	Random m_rnd;

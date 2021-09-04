@@ -14,6 +14,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 using namespace std;
 
+// constructor
 MolDyn::MolDyn(string folder) {
 
 	ifstream read = openfile(folder + "/input.dat");
@@ -27,7 +28,7 @@ MolDyn::MolDyn(string folder) {
 	m_y = new double[m_npart];
 	m_z = new double[m_npart];
 
-	read = openfile("../input/config.0");
+	read = openfile(folder + "/config.0");
   	for(int i=0; i<m_npart; ++i) {
     	read >> m_x[i] >> m_y[i] >> m_z[i];
     	m_x[i] *= m_box;
@@ -37,6 +38,7 @@ MolDyn::MolDyn(string folder) {
   	read.close();
 }
 
+// destructor
 MolDyn::~MolDyn() {
 	m_rnd.SaveSeed();
 	delete m_x;
