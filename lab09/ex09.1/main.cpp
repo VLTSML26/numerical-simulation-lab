@@ -37,21 +37,22 @@ int main() {
 	// 3 - the cost of the best individual of the final generation
   	ofstream pos[2];
 	ofstream best[2];
-	ofstream mean("data/mean.out");
+	ofstream mean[2];
 	string type[2] = {"circle", "square"};
 
 	// set the probabilities for each process
-	double exp[2] = {3., 4.};
-	double pcross[2] = {0.75, 0.6};
-	double pmutate[2] = {0.55, 0.05};
+	double exp[2] = {3., 2.}; //4
+	double pcross[2] = {0.75, 0.7}; //0.6
+	double pmutate[2] = {0.55, 0.1}; //0.05
 	
 	// iterate over type = circle and type = square
 	for(int i=0; i<2; ++i) {
 		pos[i].open("data/" + type[i] + "_pos.out");
 		best[i].open("data/" + type[i] + "_best.out");
+		mean[i].open("data/" + type[i] + "_mean.out");
 
 		// calls TSP algorithm
-		TSP(type[i], pos[i], best[i], mean, rnd, exp[i], pcross[i], pmutate[i]);
+		TSP(type[i], pos[i], best[i], mean[i], rnd, exp[i], pcross[i], pmutate[i]);
 		pos[i].close();
 		best[i].close();
 	}
@@ -93,7 +94,6 @@ vector<City> Set(ofstream &pos, Random rnd, string type) {
 
 /*
  * This function implements the Traveling Salesman Algorithm
- * and cools the system every N_generations.
  */
 void TSP(string type, ofstream &pos, ofstream& best, ofstream &mean, Random rnd, double exp, double pcross, double pmutate) {
 
@@ -122,5 +122,5 @@ void TSP(string type, ofstream &pos, ofstream& best, ofstream &mean, Random rnd,
 }
 
 double Accumulate(vector<Individual> ind) {
-	return accumulate(ind.begin(), ind.begin() + N_individuals / 2, ind[0].Cost(), [](const double x, const Individual &io) {return x + io.Cost();}) / (N_individuals / 2);
+	return accumulate(ind.begin(), ind.begin() + N_individuals / 2, ind[0].Cost(), [](const double x, const Individual &io) {return x + io.Cost();}) * 2. / N_individuals ;
 }
