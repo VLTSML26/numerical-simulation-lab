@@ -10,7 +10,7 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 #define N_cities		32
 #define N_cooling		100
-#define N_generations	3000
+#define N_generations	5000
 #define RATE			1.1
 #define Starting_BETA	0.05
 
@@ -41,7 +41,7 @@ int main() {
 	ofstream best[2];
 	ofstream mean[2];
 	string type[2] = {"circle", "square"};
-	double pmutate[2] = {0.1, 0.25};
+	double pmutate[2] = {0.1, 0.3};
 	
 	// iterate over type = circle and type = square
 	for(int i=0; i<2; ++i) {

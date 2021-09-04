@@ -10,6 +10,8 @@ _/    _/  _/_/_/  _/_/_/_/ email: Davide.Galli@unimi.it
 
 #include "TSP.h"
 #include <iostream>
+#include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -18,12 +20,12 @@ double City::Distance(const City &c) const {
 	double y = c.m_y - m_y;
 
 	// returns the L1 distance: hence no sqrt
-	return x*x + y*y;
+	return std::abs(x) + std::abs(y);
 }
 
 double Individual::Cost() const {
-	double distance = m_city[m_city.size()].Distance(m_city[0]);
-	for(size_t i=0; i<m_city.size()-1; ++i)
+	double distance = m_city[m_city.size()-1].Distance(m_city[0]);
+	for(size_t i=0; i<m_city.size()-2; ++i)
 		distance += m_city[i].Distance(m_city[i+1]);
 	return distance;
 }

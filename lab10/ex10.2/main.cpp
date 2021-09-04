@@ -57,9 +57,9 @@ int main(int argc, char *argv[]) {
 	string type[2] = {"circle", "square"};
 
 	// set the probabilities for each process
-	double exp[2] = {2.5, 4.};
-	double pcross[2] = {0.69, 0.6};
-	double pmutate[2] = {0.33, 0.05};
+	double exp[2] = {2.5, 2.};
+	double pcross[2] = {0.69, 0.7};
+	double pmutate[2] = {0.33, 0.1};
 
 	// iterate over type = circle and type = square
 	for(int i=0; i<2; ++i) {
