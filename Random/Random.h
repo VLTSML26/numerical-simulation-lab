@@ -37,6 +37,26 @@ class Random {
   	double Line();
 	void Spherical3D(double, double[]);
 //	void Metropolis(double[], int, double, std::function<double(double[])>, std::string);
+	template <class T> void Metropolis(T xn[], T y[], double delta, std::function<double(T[])> p, std::string s) {
+		int dim = sizeof *y;
+		if(s == "Uniform") {
+			for(int i=0; i<dim; i++)
+				y[i] = Rannyu(xn[i] - delta, xn[i] + delta);
+		} else if(s == "Gauss") {
+			for(int i=0; i<dim; i++)
+				y[i] = Gauss(xn[i], delta);
+		} else {
+			std::cout << "For now, Metropolis can function only with <Uniform> and <Gauss> sampling" << std::endl;
+			return;
+		}
+		
+		double alpha = p(y) / p(xn);
+		if(alpha >= Rannyu()) {
+			m_counter ++;
+			for(int i=0; i<dim; i++)
+				xn[i] = y[i];
+		}
+	}
 	template <class T> void Metropolis(T xn[], int dim, double delta, std::function<double(T[])> p, std::string s) {
 		T *y = new T[dim];
 		if(s == "Uniform") {
