@@ -1,0 +1,2 @@
+make
+./qmc1d

@@ -1,5 +1,4 @@
 timeslices				300
-imaginaryTimePropagation		8.0
                                                                                                                  
 brownianMotionReconstructions           100
 delta_translation			1.1

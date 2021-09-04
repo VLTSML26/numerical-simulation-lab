@@ -15,7 +15,7 @@ using namespace std;
 The comments in this file are not detailed. See qmc1d.cpp for a better explanation.
 */
 
-void readInput(double, string);   // reads input from the file "input.dat"
+void readInput(double, string, double);   // reads input from the file "input.dat"
 void deleteMemory(); // handles the dynamic allocation of memory
 void initialize();  // initializes the variables
 void consoleOutput(); // writes the output on the screen

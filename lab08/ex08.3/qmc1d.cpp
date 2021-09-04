@@ -47,18 +47,34 @@ double psi_T(double);
 double D2_psi(double);
 double constant(double);
 double D2_constant(double);
-void qmc1d(double, string, string);
+void qmc1d(double, double, string, string);
 
 int main() {
 
-	variationalWaveFunction = constant;
-	variationalWaveFunction_second = D2_constant;
-	qmc1d(0., "input.pigs", "data/pigs_trial");  
+	// PIGS with different imaginary time propagation
+	double tau[8] = {8., 5., 2., 1., 0.8, 0.5, 0.2, 0.1};
+	for(int i=0; i<8; i++) {
+		ostringstream out_pigs1;
+		out_pigs1.precision(1);
+		out_pigs1.setf(ios_base::fixed);
+		out_pigs1 << "data/pigs_trial_" << tau[i];
+		string out1 = out_pigs1.str();
+		variationalWaveFunction = constant;
+		variationalWaveFunction_second = D2_constant;
+		qmc1d(0., tau[i], "input.pigs", out1);
 
-	variationalWaveFunction = psi_T;
-	variationalWaveFunction_second = D2_psi;
-	qmc1d(0., "input.pigs", "data/pigs_psi");  
+		ostringstream out_pigs2;
+		out_pigs2.precision(1);
+		out_pigs2.setf(ios_base::fixed);
+		out_pigs2 << "data/pigs_psi_" << tau[i];
+		string out2 = out_pigs2.str();
+		variationalWaveFunction = psi_T;
+		variationalWaveFunction_second = D2_psi;
+		qmc1d(0., tau[i], "input.pigs", out2);
+	}
+	cout << "done pigs" << endl;
 
+	// PIMC with different temperatures
 	for(int i=0; i<N_temp; i++) {
 		double T = 1. + 0.5 * i;
 		ostringstream out_stream;
@@ -66,14 +82,14 @@ int main() {
 		out_stream.setf(ios_base::fixed);
 		out_stream << "data/pimc_psi_" << T;
 		string out = out_stream.str();
-		qmc1d(T, "input.pimc", out);
+		qmc1d(T, 8.0, "input.pimc", out);
 	}
 
 	return 0;
 }
  
-void qmc1d(double T, string in, string out) {
-	readInput(T, in);
+void qmc1d(double T, double tau, string in, string out) {
+	readInput(T, in, tau);
 	initialize();  
 	/* at this time, every variable you see, such for instance "equilibration",
 	has been either acquired from "input.dat" by the readInput() function or
@@ -108,7 +124,7 @@ void qmc1d(double T, string in, string out) {
 			
 			upgradeAverages();
 		}
-		cout<<"Completed block: "<<b+1<<"/"<<blocks<<endl;
+		//cout<<"Completed block: "<<b+1<<"/"<<blocks<<endl;
 		endBlock();
 	}
 	
@@ -425,11 +441,11 @@ int index_mask(int ind)
 
 void consoleOutput()
 {
-	cout<<"Acceptances:"<<endl;
-	if(PIGS)
-		cout<<"BM: "<<((double)acceptedBM)/totalBM<<endl;
-	cout<<"Transl: "<<((double)acceptedTranslations)/totalTranslations<<endl;
-	cout<<"BB: "<<((double)acceptedBB)/totalBB<<endl;
+	//cout<<"Acceptances:"<<endl;
+	//if(PIGS)
+	//	cout<<"BM: "<<((double)acceptedBM)/totalBM<<endl;
+//	cout<<"Transl: "<<((double)acceptedTranslations)/totalTranslations<<endl;
+//	cout<<"BB: "<<((double)acceptedBB)/totalBB<<endl;
 }
 
 
@@ -573,7 +589,7 @@ double variationalLocalEnergy(double val)
 	return -(hbar*hbar/(2*mass))*laplacian_psi/psi;
 }
 
-void readInput(double T, string in)
+void readInput(double T, string in, double tau)
 {
 
 	ifstream input_file(in);
@@ -581,7 +597,7 @@ void readInput(double T, string in)
 
 	input_file >> string_away >> timeslices;
 	temperature = T;
-	input_file >> string_away >> imaginaryTimePropagation;
+	imaginaryTimePropagation = tau;
 	input_file >> string_away >> brownianMotionReconstructions;
 	input_file >> string_away >> delta_translation;
 	input_file >> string_away >> brownianBridgeReconstructions;
